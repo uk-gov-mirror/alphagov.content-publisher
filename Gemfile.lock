@@ -7,6 +7,16 @@ GIT
       capybara
       colorize
 
+PATH
+  remote: ../govuk_app_config
+  specs:
+    govuk_app_config (1.16.1)
+      aws-xray-sdk (~> 0.10.0)
+      logstasher (~> 1.2.2)
+      sentry-raven (~> 2.7.1)
+      statsd-ruby (~> 1.4.0)
+      unicorn (~> 5.4.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -142,12 +152,6 @@ GEM
       rubocop (~> 0.64)
       rubocop-rspec (~> 1.28)
       scss_lint
-    govuk_app_config (1.16.1)
-      aws-xray-sdk (~> 0.10.0)
-      logstasher (~> 1.2.2)
-      sentry-raven (~> 2.7.1)
-      statsd-ruby (~> 1.4.0)
-      unicorn (~> 5.4.0)
     govuk_frontend_toolkit (8.1.0)
       railties (>= 3.1.0)
       sass (>= 3.2.0)
@@ -464,7 +468,7 @@ DEPENDENCIES
   gds-sso (~> 14)
   govspeak (~> 6)
   govuk-lint (~> 3)
-  govuk_app_config (~> 1)
+  govuk_app_config!
   govuk_publishing_components (~> 16.16)
   govuk_schemas (~> 3.2)
   govuk_sidekiq (~> 3)
