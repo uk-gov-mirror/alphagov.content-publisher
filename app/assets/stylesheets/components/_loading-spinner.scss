@@ -4,6 +4,12 @@
   padding: govuk-spacing(8) * 2;
 }
 
+@for $i from 0 through 11 {
+  .app-c-loading-spinner__rect-#{$i} {
+    animation: app-loading-spinner-opacity-#{$i} 1s linear 0s infinite normal none running;
+  }
+}
+
 @keyframes app-loading-spinner-opacity-0 {
   0% { opacity: 0.250075; }
   0.01% { opacity: 0.25; }
