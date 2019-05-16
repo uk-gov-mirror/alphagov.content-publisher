@@ -4,13 +4,13 @@
     <meta name="sentry-current-env" content="<%= ENV["SENTRY_CURRENT_ENV"] %>">
   <% end %>
 
-  <script>
+  <%= javascript_tag nonce: true do %>
     var dataLayer = [{
       'user-organisation': '<%= current_user.organisation_slug %>',
       'cp-uid': '<%= current_user.uid %>'
     }];
     dataLayer.push({ 'gtm.blacklist': ['html', 'customScripts', 'nonGoogleScripts', 'customPixels'] });
-  </script>
+  <% end %>
   <% if ENV["GOOGLE_TAG_MANAGER_ID"] %>
     <%= render "govuk_publishing_components/components/google_tag_manager_script", {
       gtm_id: ENV["GOOGLE_TAG_MANAGER_ID"],
