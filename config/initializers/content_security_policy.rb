@@ -27,7 +27,15 @@
 Rails.application.config.content_security_policy do |policy|
   GOVUK_DOMAINS = %w(*.publishing.service.gov.uk).freeze
 
-  GOOGLE_ANALYTICS_DOMAINS = %w(www.google-analytics.com ssl.google-analytics.com stats.g.doubleclick.net).freeze
+  GOOGLE_ANALYTICS_DOMAINS = %w(www.google-analytics.com
+                                ssl.google-analytics.com
+                                stats.g.doubleclick.net
+                                www.googletagmanager.com
+                                tagmanager.google.com
+                                ssl.gstatic.com
+                                www.gstatic.com
+                                fonts.googleapis.com
+                                fonts.gstatic.com).freeze
 
   # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/default-src
   policy.default_src :https, :self, *GOVUK_DOMAINS
@@ -52,7 +60,10 @@ Rails.application.config.content_security_policy do |policy|
 
   # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/style-src
   policy.style_src :self,
-                   *GOVUK_DOMAINS
+                   *GOVUK_DOMAINS,
+                   *GOOGLE_ANALYTICS_DOMAINS,
+                   # Permit style= on HTML elements
+                   :unsafe_inline
 
   # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/connect-src
   policy.connect_src :self,
@@ -62,6 +73,12 @@ Rails.application.config.content_security_policy do |policy|
                     "www.tax.service.gov.uk",
                     # Allow connecting to Verify to check whether the user is logged in
                     "www.signin.service.gov.uk"
+
+  # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/font-src
+  policy.font_src :self,
+                  *GOVUK_DOMAINS,
+                  *GOOGLE_ANALYTICS_DOMAINS,
+                  :data
 
   # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/object-src
   policy.object_src :none
