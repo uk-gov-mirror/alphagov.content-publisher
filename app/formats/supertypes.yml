@@ -6,6 +6,7 @@
   display_document_types:
     - news_story
     - press_release
+    - government_response
     - fatality_notice
     - speech
     - world_news_story

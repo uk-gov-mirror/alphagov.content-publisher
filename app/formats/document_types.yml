@@ -121,6 +121,68 @@
       document_type: world_location
       hint: Tag locations this content is about. If it only relates to the UK you don’t need to use this tag.
 
+- id: government_response
+  label: Government response
+  # @todo government response info
+  description: "Forthcoming description on government response"
+  # @todo govspeak response info
+  hint_govspeak: |
+    Forthcoming hint for government response
+  path_prefix: /government/news
+  images: true
+  topics: true
+  check_path_conflict: true
+  publishing_metadata:
+    schema_name: news_article
+    rendering_app: government-frontend
+  guidance:
+    - id: title
+      title: Title
+      body_govspeak: The title should be unique and specific. It must make clear what the content offers users. Use the words your users do to help them find this. Avoid wordplay or teases.
+    - id: summary
+      title: Summary
+      body_govspeak: The summary should explain the main point of the story. It is the first line of the story so don’t repeat it in the body and end with a full stop.
+    - id: body
+      title: Writing a press release
+      body_govspeak: |
+        Use short words, short sentences, and short paragraphs. Use subheadings in longer content. Avoid 'notes to editors'.
+
+        [Guidance on press releases](https://www.gov.uk/guidance/content-design/content-types#press-release){:target="_blank"}
+
+        [Writing for GOV.UK](https://www.gov.uk/guidance/content-design/writing-for-gov-uk#writing-to-govuk-style){:target="_blank"}
+
+        [The style guide](https://www.gov.uk/guidance/style-guide){:target="_blank"}
+  contents:
+    - id: body
+      label: Body
+      type: govspeak
+  tags:
+    - id: primary_publishing_organisation
+      label: Primary organisation
+      type: single_tag
+      document_type: organisation
+      hint: The organisation responsible for publishing and maintaining this content.
+    - id: organisations
+      label: Organisations
+      type: multi_tag
+      document_type: organisation
+      hint: Tag organisations associated with this content.
+    - id: role_appointments
+      label: Ministers and government appointments
+      type: multi_tag
+      document_type: role_appointment
+      hint: Tag people who are directly involved.
+    - id: topical_events
+      label: Topical events
+      type: multi_tag
+      document_type: topical_event
+      hint: Tag major events this content is related to. For example, summits or budgets.
+    - id: world_locations
+      label: World locations
+      type: multi_tag
+      document_type: world_location
+      hint: Tag locations this content is about. If it only relates to the UK you don’t need to use this tag.
+
 - id: fatality_notice
   label: Fatality notice
   description: Initial fatality notices and subsequent obituaries of forces and MOD personnel
