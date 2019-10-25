@@ -29,6 +29,8 @@ gem "sidekiq-scheduler", "~> 3"
 gem "uglifier", "~> 4"
 gem "with_advisory_lock", "~> 4"
 
+gem "ruby-prof"
+
 group :development do
   gem "brakeman", "~> 4"
   gem "listen", "~> 3"
