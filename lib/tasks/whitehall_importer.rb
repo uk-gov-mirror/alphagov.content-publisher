@@ -65,12 +65,18 @@ module Tasks
     end
 
     def create_or_update_document
+      first_edition = whitehall_document["editions"].first
+      first_edition_create_whitehall_user_id = first_edition["associations"]["versions"].first["whodunnit"].to_i
+      first_edition_create_uid = first_edition["associations"]["authors"].find {|x| x["id"] == first_edition_create_whitehall_user_id }["uid"]
+      first_edition_create_user = User.find_by(uid: first_edition_create_uid)
+
       Document.find_or_create_by(
         content_id: whitehall_document["document"]["content_id"],
         locale: "en",
         document_type_id: "news_story", ## To be updated once Whitehall exports this value
         created_at: whitehall_document["document"]["created_at"],
         updated_at: whitehall_document["document"]["updated_at"],
+        created_by_id: first_edition_create_user.id,
       )
     end
 
@@ -94,6 +100,11 @@ module Tasks
         created_at: whitehall_edition["edition"]["created_at"],
       )
 
+      edition_create_whitehall_user_id = whitehall_edition["associations"]["versions"].first["whodunnit"].to_i
+      edition_create_uid = whitehall_edition["associations"]["authors"].find {|x| x["id"] == edition_create_whitehall_user_id }["uid"]
+      edition_create_user = User.find_by(uid: edition_create_uid)
+      edition_last_update_user = User.find_by(uid: whitehall_edition["associations"]["last_author"]["uid"])
+
       Edition.create!(
         document: document,
         number: edition_number,
@@ -107,6 +118,8 @@ module Tasks
         live: live?(whitehall_edition),
         created_at: whitehall_edition["edition"]["created_at"],
         updated_at: whitehall_edition["edition"]["updated_at"],
+        created_by_id: edition_create_user.id,
+        last_edited_by_id: edition_last_update_user.id,
       )
     end
 
