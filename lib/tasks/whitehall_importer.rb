@@ -18,6 +18,7 @@ module Tasks
         document = create_or_update_document
 
         whitehall_document["editions"].each_with_index do |edition, edition_number|
+          create_users(edition["associations"]["authors"])
           edition["associations"]["translations"].each do |translation|
             next unless SUPPORTED_WHITEHALL_STATES.include?(edition["edition"]["state"])
             next unless SUPPORTED_LOCALES.include?(translation["locale"])
@@ -46,6 +47,18 @@ module Tasks
     end
 
   private
+
+    def create_users(users)
+      users.each do |user|
+        next if User.exists?(uid: user["uid"])
+        User.create(
+          uid: user["uid"],
+          name: user["name"],
+          permissions: [],
+          email: user["email"],
+        )
+      end
+    end
 
     def most_recent_edition
       whitehall_document["editions"].max_by { |e| e["edition"]["created_at"] }

@@ -31,6 +31,14 @@ RSpec.describe Tasks::WhitehallImporter do
                 "body" => "Body",
               },
             ],
+            "authors" => [
+              {
+                "id" => 1,
+                "name" => "A Person",
+                "uid" => "36d5154e-d3b7-4e3e-aad8-32a50fc9430e",
+                "email" => "a-publisher@department.gov.uk",
+              },
+            ],
           },
         },
       ],
@@ -51,6 +59,13 @@ RSpec.describe Tasks::WhitehallImporter do
     expect(edition.number).to eql(1)
     expect(edition.status).to be_draft
     expect(edition.update_type).to eq("major")
+  end
+
+  it "adds users who have never logged into Content Publisher" do
+    importer = Tasks::WhitehallImporter.new(123, import_data)
+    importer.import
+
+    expect(User.last.uid).to eq "36d5154e-d3b7-4e3e-aad8-32a50fc9430e"
   end
 
   it "sets the correct states when Whitehall document state is 'published'" do
@@ -147,6 +162,14 @@ RSpec.describe Tasks::WhitehallImporter do
                   "body" => "Body",
                 },
               ],
+              "authors" => [
+                {
+                  "id" => 1,
+                  "name" => "A Person",
+                  "uid" => "36d5154e-d3b7-4e3e-aad8-32a50fc9430e",
+                  "email" => "a-publisher@department.gov.uk",
+                },
+              ],
             },
           },
           {
@@ -167,6 +190,14 @@ RSpec.describe Tasks::WhitehallImporter do
                   "title" => "Title",
                   "summary" => "Summary",
                   "body" => "Body",
+                },
+              ],
+              "authors" => [
+                {
+                  "id" => 1,
+                  "name" => "A Person",
+                  "uid" => "36d5154e-d3b7-4e3e-aad8-32a50fc9430e",
+                  "email" => "a-publisher@department.gov.uk",
                 },
               ],
             },
