@@ -5,6 +5,12 @@ RSpec.describe Tasks::WhitehallImporter do
 
   let(:import_data) { whitehall_export_with_one_edition }
 
+  before do
+    binary_image = File.open(File.join(fixtures_path, "files", "960x640.jpg"), "rb").read
+    stub_request(:get, whitehall_export_with_one_edition.dig("editions", 0, "images", 0, "url")).
+      to_return(status: 200, body: binary_image)
+  end
+
   it "can import JSON data from Whitehall" do
     importer = Tasks::WhitehallImporter.new(123, import_data)
 
@@ -210,6 +216,51 @@ RSpec.describe Tasks::WhitehallImporter do
       edition = Edition.last
 
       expect(edition.supporting_organisation_ids.first).to eq(imported_organisation["content_id"])
+    end
+  end
+
+  context "when importing images" do
+    let(:edition) { Edition.last }
+    let(:revision) { Revision.last }
+    let(:image) { Image.last }
+    let(:image_metadata_revision) { Image::MetadataRevision.last }
+    let(:image_blob_revision) { Image::BlobRevision.last }
+
+    before do
+      importer = Tasks::WhitehallImporter.new(123, import_data)
+      importer.import
+    end
+
+    subject do
+      import_data["editions"][0]["images"][0]
+    end
+
+    it "creates an Image" do
+      expect(image.created_by_id).to be_nil
+      expect(image.created_at).to eq(subject["created_at"])
+    end
+
+    it "creates an Image::BlobRevision" do
+      expect(image_blob_revision.content_type).to eq("image/jpeg")
+      expect(image_blob_revision.blob.class.name).to eq("ActiveStorage::Blob")
+      expect(image_blob_revision.filename).to eq("some-image.jpg")
+    end
+
+    it "creates an Image::MetadataRevision" do
+      expect(image_metadata_revision.caption).to eq(subject["caption"])
+      expect(image_metadata_revision.alt_text).to eq(subject["alt_text"])
+      expect(image_metadata_revision.created_at).to eq(subject["created_at"])
+      expect(image_metadata_revision.credit).to be_nil
+      expect(image_metadata_revision.created_by_id).to be_nil
+    end
+
+    it "creates an Image::Revision that references all the above" do
+      image_revision = edition.image_revisions.last
+      expect(edition.revisions.last).to eq(revision)
+      expect(image_revision.image).to eq(image)
+      expect(image_revision.blob_revision).to eq(image_blob_revision)
+      expect(image_revision.metadata_revision).to eq(image_metadata_revision)
+      expect(image_revision.revisions.last).to eq(revision)
     end
   end
 
