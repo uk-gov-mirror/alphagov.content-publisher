@@ -229,36 +229,67 @@ RSpec.describe Tasks::WhitehallImporter do
       importer.import
     end
 
-    subject do
-      import_data["editions"][0]["images"][0]
+    context "when there is one image" do
+      let(:import_data) { whitehall_export_with_images("single_image.json") }
+
+      subject do
+        import_data["editions"][0]["images"][0]
+      end
+
+      it "creates an Image" do
+        expect(image.created_by_id).to be_nil
+        expect(image.created_at).to eq(subject["created_at"])
+      end
+
+      it "creates an Image::BlobRevision" do
+        expect(image_blob_revision.content_type).to eq("image/jpeg")
+        expect(image_blob_revision.blob.class.name).to eq("ActiveStorage::Blob")
+        expect(image_blob_revision.filename).to eq("some-image.jpg")
+      end
+
+      it "creates an Image::MetadataRevision" do
+        expect(image_metadata_revision.caption).to eq(subject["caption"])
+        expect(image_metadata_revision.alt_text).to eq(subject["alt_text"])
+        expect(image_metadata_revision.created_at).to eq(subject["created_at"])
+        expect(image_metadata_revision.credit).to be_nil
+        expect(image_metadata_revision.created_by_id).to be_nil
+      end
+
+      it "creates an Image::MetadataRevision" do
+        expect(image_metadata_revision.caption).to eq(subject["caption"])
+        expect(image_metadata_revision.alt_text).to eq(subject["alt_text"])
+        expect(image_metadata_revision.created_at).to eq(subject["created_at"])
+        expect(image_metadata_revision.credit).to be_nil
+        expect(image_metadata_revision.created_by_id).to be_nil
+      end
+
+      it "creates an Image::Revision that references all the above" do
+        image_revision = edition.image_revisions.first
+        expect(edition.revisions.last).to eq(revision)
+        expect(image_revision.image).to eq(image)
+        expect(image_revision.blob_revision).to eq(image_blob_revision)
+        expect(image_revision.metadata_revision).to eq(image_metadata_revision)
+        expect(image_revision.revisions.last).to eq(revision)
+      end
     end
 
-    it "creates an Image" do
-      expect(image.created_by_id).to be_nil
-      expect(image.created_at).to eq(subject["created_at"])
-    end
+    context "there are multiple images to import" do
+      let(:import_data) { whitehall_export_with_images("multiple_images.json") }
 
-    it "creates an Image::BlobRevision" do
-      expect(image_blob_revision.content_type).to eq("image/jpeg")
-      expect(image_blob_revision.blob.class.name).to eq("ActiveStorage::Blob")
-      expect(image_blob_revision.filename).to eq("some-image.jpg")
-    end
+      it "imports all images" do
+        expect(edition.image_revisions.count).to eq(2)
 
-    it "creates an Image::MetadataRevision" do
-      expect(image_metadata_revision.caption).to eq(subject["caption"])
-      expect(image_metadata_revision.alt_text).to eq(subject["alt_text"])
-      expect(image_metadata_revision.created_at).to eq(subject["created_at"])
-      expect(image_metadata_revision.credit).to be_nil
-      expect(image_metadata_revision.created_by_id).to be_nil
-    end
+        first_image = edition.image_revisions.first
+        second_image = edition.image_revisions.last
 
-    it "creates an Image::Revision that references all the above" do
-      image_revision = edition.image_revisions.last
-      expect(edition.revisions.last).to eq(revision)
-      expect(image_revision.image).to eq(image)
-      expect(image_revision.blob_revision).to eq(image_blob_revision)
-      expect(image_revision.metadata_revision).to eq(image_metadata_revision)
-      expect(image_revision.revisions.last).to eq(revision)
+        expect(first_image.image).to eq(Image.first)
+        expect(first_image.blob_revision).to eq(Image::BlobRevision.first)
+        expect(first_image.metadata_revision).to eq(Image::MetadataRevision.first)
+
+        expect(second_image.image).to eq(Image.last)
+        expect(second_image.blob_revision).to eq(Image::BlobRevision.last)
+        expect(second_image.metadata_revision).to eq(Image::MetadataRevision.last)
+      end
     end
   end
 
