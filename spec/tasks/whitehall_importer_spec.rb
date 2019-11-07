@@ -6,9 +6,7 @@ RSpec.describe Tasks::WhitehallImporter do
   let(:import_data) { whitehall_export_with_one_edition }
 
   before do
-    binary_image = File.open(File.join(fixtures_path, "files", "960x640.jpg"), "rb").read
-    stub_request(:get, whitehall_export_with_one_edition.dig("editions", 0, "images", 0, "url")).
-      to_return(status: 200, body: binary_image)
+    stub_network_requests_to_whitehall_images
   end
 
   it "can import JSON data from Whitehall" do

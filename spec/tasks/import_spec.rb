@@ -10,9 +10,7 @@ RSpec.describe "Import tasks" do
     before do
       Rake::Task["import:whitehall"].reenable
       stub_request(:get, "#{whitehall_host}/government/admin/export/document/123").to_return(status: 200, body: import_data.to_json)
-      binary_image = File.open(File.join(fixtures_path, "files", "960x640.jpg"), "rb").read
-      stub_request(:get, whitehall_export_with_one_edition.dig("editions", 0, "images", 0, "url")).
-        to_return(status: 200, body: binary_image)
+      stub_network_requests_to_whitehall_images
     end
 
     it "logs raw JSON from Whitehall" do
