@@ -23,6 +23,8 @@ module FixturesHelper
     binary_jpg = File.open(File.join(fixtures_path, "files", "960x640.jpg"), "rb").read
     stub_request(:get, "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/default_news_organisation_image_data/file/42/some-image.jpg").
       to_return(status: 200, body: binary_jpg)
+    stub_request(:get, "https://assets.publishing.service.gov.uk/some/other/path/some-image.jpg").
+      to_return(status: 200, body: binary_jpg)
 
     binary_png = File.open(File.join(fixtures_path, "files", "Bad $ name.png"), "rb").read
     stub_request(:get, "https://assets.publishing.service.gov.uk/frontend/homepage/nhs-long-term-plan-495f6e127d8e29d77cdc8ca724043fda508a74cb381ac216129a98693d53891d.png").
