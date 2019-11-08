@@ -38,7 +38,14 @@ private
   end
 
   def create_image_revision
-    blob_revision = ImageBlobService.call(edition.revision, user, temp_image)
+    blob_revision = ImageBlobService.call(
+      user: user,
+      temp_image: temp_image,
+      filename: UniqueFilenameService.call(
+        original_filename: temp_image.original_filename,
+        ensure_unique_against: edition.revision.image_revisions.map(&:filename),
+      ),
+    )
     context.image_revision = Image::Revision.create_initial(blob_revision: blob_revision)
   end
 
