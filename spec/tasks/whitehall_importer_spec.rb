@@ -223,14 +223,12 @@ RSpec.describe Tasks::WhitehallImporter do
     let(:image) { Image.last }
     let(:image_metadata_revision) { Image::MetadataRevision.last }
     let(:image_blob_revision) { Image::BlobRevision.last }
-
-    before do
-      importer = Tasks::WhitehallImporter.new(123, import_data)
-      importer.import
-    end
+    let(:importer) { Tasks::WhitehallImporter.new(123, import_data) }
 
     context "when there is one image" do
       let(:import_data) { whitehall_export_with_images("single_image.json") }
+
+      before { importer.import }
 
       subject do
         import_data["editions"][0]["images"][0]
@@ -276,6 +274,8 @@ RSpec.describe Tasks::WhitehallImporter do
     context "there are multiple images to import" do
       let(:import_data) { whitehall_export_with_images("multiple_images.json") }
 
+      before { importer.import }
+
       it "imports all images" do
         expect(edition.image_revisions.count).to eq(2)
 
@@ -295,10 +295,20 @@ RSpec.describe Tasks::WhitehallImporter do
     context "there are multiple images to import, with the same name" do
       let(:import_data) { whitehall_export_with_images("multiple_images_with_same_name.json") }
 
+      before { importer.import }
+
       it "renames the file so that it's unique" do
         expect(edition.image_revisions.count).to eq(2)
         expect(Image::BlobRevision.first.filename).to eq("some-image.jpg")
         expect(Image::BlobRevision.last.filename).to eq("some-image-1.jpg")
+      end
+    end
+
+    context "at least one of the images is an SVG" do
+      let(:import_data) { whitehall_export_with_images("contains_svg.json") }
+
+      it "aborts the import" do
+        expect { importer.import }.to raise_error(Tasks::AbortImportError)
       end
     end
   end
