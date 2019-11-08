@@ -37,7 +37,7 @@ private
     filenames = revision.image_revisions.map(&:filename)
 
     @unique_filename ||= UniqueFilenameService
-      .call(filenames, temp_image.original_filename)
+      .call(original_filename: temp_image.original_filename, ensure_unique_against: filenames)
   end
 
   def centre_crop

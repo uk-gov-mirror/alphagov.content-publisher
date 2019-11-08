@@ -35,7 +35,7 @@ private
   def unique_filename
     existing_filenames = revision.file_attachment_revisions.map(&:filename)
     existing_filenames.delete(replacing.filename) if replacing
-    UniqueFilenameService.call(existing_filenames, file.original_filename)
+    UniqueFilenameService.call(ensure_unique_against: existing_filenames, original_filename: file.original_filename)
   end
 
   def number_of_pages

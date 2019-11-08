@@ -3,13 +3,13 @@
 class UniqueFilenameService < ApplicationService
   MAX_LENGTH = 65
 
-  def initialize(existing_filenames, suggested_name)
-    @existing_filenames = existing_filenames
-    @suggested_name = suggested_name
+  def initialize(original_filename:, ensure_unique_against: [])
+    @original_filename = original_filename
+    @ensure_unique_against = ensure_unique_against
   end
 
   def call
-    filename = ActiveStorage::Filename.new(suggested_name)
+    filename = ActiveStorage::Filename.new(original_filename)
     base = filename.base.parameterize.slice 0...MAX_LENGTH
     base = ensure_unique(base)
     return base if filename.extension.blank?
@@ -19,10 +19,10 @@ class UniqueFilenameService < ApplicationService
 
 private
 
-  attr_reader :existing_filenames, :suggested_name
+  attr_reader :original_filename, :ensure_unique_against
 
   def ensure_unique(base)
-    potential_conflicts = existing_filenames
+    potential_conflicts = ensure_unique_against
                             .map(&ActiveStorage::Filename.method(:new))
                             .map(&:base)
 
