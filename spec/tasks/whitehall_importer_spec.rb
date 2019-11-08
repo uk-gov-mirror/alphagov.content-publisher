@@ -304,11 +304,31 @@ RSpec.describe Tasks::WhitehallImporter do
       end
     end
 
-    context "at least one of the images is an SVG" do
+    context "first image is an SVG" do
       let(:import_data) { whitehall_export_with_images("contains_svg.json") }
 
       it "aborts the import" do
         expect { importer.import }.to raise_error(Tasks::AbortImportError)
+      end
+    end
+
+    context "one of the latter images is an SVG" do
+      let(:import_data) { whitehall_export_with_images("contains_valid_images_and_one_svg.json") }
+
+      it "aborts the import" do
+        expect { importer.import }.to raise_error(Tasks::AbortImportError)
+      end
+
+      it "should not have created any of the preceding images" do
+        begin
+          importer.import
+        rescue Tasks::AbortImportError
+          expect(Image.count).to eq(0)
+          expect(Image::BlobRevision.count).to eq(0)
+          expect(Image::MetadataRevision.count).to eq(0)
+          expect(Revision.count).to eq(0)
+          expect(Edition.count).to eq(0)
+        end
       end
     end
   end
