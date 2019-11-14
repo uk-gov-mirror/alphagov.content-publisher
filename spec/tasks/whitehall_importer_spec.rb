@@ -342,6 +342,25 @@ RSpec.describe Tasks::WhitehallImporter do
         end
       end
     end
+
+    context "the same image is referenced across multiple editions" do
+      let(:import_data) do
+        whitehall_export_with_two_editions_and_images(
+          "single_image.json",
+          "single_image.json",
+        )
+      end
+
+      before { importer.import }
+
+      it "should import the images twice - we don't mind" do
+        expect(Revision.count).to eq(2)
+        expect(Edition.count).to eq(2)
+        expect(Image.count).to eq(2)
+        expect(Image::BlobRevision.count).to eq(2)
+        expect(Image::MetadataRevision.count).to eq(2)
+      end
+    end
   end
 
   context "when an imported document has more than one edition" do

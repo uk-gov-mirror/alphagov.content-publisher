@@ -19,6 +19,13 @@ module FixturesHelper
     whitehall_export_with_images
   end
 
+  def whitehall_export_with_two_editions_and_images(edition_1_images, edition_2_images)
+    whitehall_export_with_images = whitehall_export_with_two_editions
+    whitehall_export_with_images["editions"][0]["images"] = JSON.parse(File.read(fixtures_path + "/whitehall_image_exports/#{edition_1_images}"))
+    whitehall_export_with_images["editions"][1]["images"] = JSON.parse(File.read(fixtures_path + "/whitehall_image_exports/#{edition_2_images}"))
+    whitehall_export_with_images
+  end
+
   def stub_network_requests_to_whitehall_images
     binary_jpg = File.open(File.join(fixtures_path, "files", "960x640.jpg"), "rb").read
     stub_request(:get, "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/default_news_organisation_image_data/file/42/some-image.jpg").
