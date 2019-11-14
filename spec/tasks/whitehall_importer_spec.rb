@@ -315,11 +315,37 @@ RSpec.describe Tasks::WhitehallImporter do
       end
     end
 
-    context "image is not 960x640" do
+    context "first image is not 960x640" do
       let(:import_data) { whitehall_export_with_images("1000x1000.json") }
 
       it "aborts the import" do
-        expect { importer.import }.to raise_error(Tasks::AbortImportError)
+        expect { importer.import }.to raise_error(
+          Tasks::AbortImportError,
+          "Image must be 960x640. Dimensions were 1000x1000",
+        )
+      end
+    end
+
+    context "one of the latter images is not 960x640" do
+      let(:import_data) { whitehall_export_with_images("contains_valid_images_and_one_1000x1000.json") }
+
+      it "aborts the import" do
+        expect { importer.import }.to raise_error(
+          Tasks::AbortImportError,
+          "Image must be 960x640. Dimensions were 1000x1000",
+        )
+      end
+
+      it "should not have created any of the preceding images" do
+        begin
+          importer.import
+        rescue Tasks::AbortImportError
+          expect(Image.count).to eq(0)
+          expect(Image::BlobRevision.count).to eq(0)
+          expect(Image::MetadataRevision.count).to eq(0)
+          expect(Revision.count).to eq(0)
+          expect(Edition.count).to eq(0)
+        end
       end
     end
 

@@ -168,20 +168,19 @@ module Tasks
           raise AbortImportError, "SVG detected: #{memo['url']}"
         end
 
+        image = ImageNormaliser.new(URI.parse(memo["url"]).open).normalise
+        unless image.width == 960 && image.height == 640
+          raise AbortImportError, "Image must be 960x640. Dimensions were #{image.width}x#{image.height}"
+        end
+
+        memo["normalised_image"] = image
         memo
       end
     end
 
     def create_blob_from_image(whitehall_image, images_added_so_far)
-      raw_file = URI.parse(whitehall_image["url"]).open
-      image = ImageNormaliser.new(raw_file).normalise
-
-      unless image.width == 960 && image.height == 640
-        raise AbortImportError, "Image must be 960x640. Dimensions were #{image.width}x#{image.height}"
-      end
-
       blob_revision = ImageBlobService.call(
-        temp_image: image,
+        temp_image: whitehall_image["normalised_image"],
         filename: UniqueFilenameService.call(
           ensure_unique_against: images_added_so_far,
           original_filename: whitehall_image["filename"],

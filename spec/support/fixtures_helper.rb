@@ -32,6 +32,8 @@ module FixturesHelper
       to_return(status: 200, body: binary_jpg)
     stub_request(:get, "https://assets.publishing.service.gov.uk/some/other/path/some-image.jpg").
       to_return(status: 200, body: binary_jpg)
+    stub_request(:get, "https://assets.publishing.service.gov.uk/path/to/some/photo.jpg").
+      to_return(status: 200, body: binary_jpg)
 
     binary_jpg_1000px = File.open(File.join(fixtures_path, "files", "1000x1000.jpg"), "rb").read
     stub_request(:get, "https://assets.publishing.service.gov.uk/government/uploads/etc/1000x1000.jpg").
@@ -40,5 +42,9 @@ module FixturesHelper
     binary_png = File.open(File.join(fixtures_path, "files", "960x640.png"), "rb").read
     stub_request(:get, "https://assets.publishing.service.gov.uk/frontend/homepage/nhs-long-term-plan-495f6e127d8e29d77cdc8ca724043fda508a74cb381ac216129a98693d53891d.png").
       to_return(status: 200, body: binary_png)
+
+    binary_gif = File.open(File.join(fixtures_path, "files", "static-gif-960x640.gif"), "rb").read
+    stub_request(:get, "https://assets.publishing.service.gov.uk/path/to/some/static.gif").
+      to_return(status: 200, body: binary_gif)
   end
 end
