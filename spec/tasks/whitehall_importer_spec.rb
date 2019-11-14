@@ -349,6 +349,17 @@ RSpec.describe Tasks::WhitehallImporter do
       end
     end
 
+    context "image does not exist" do
+      let(:import_data) { whitehall_export_with_images("image_404.json") }
+
+      it "aborts the import" do
+        expect { importer.import }.to raise_error(
+          Tasks::AbortImportError,
+          "Image does not exist: https://assets.publishing.service.gov.uk/does/not/exist.jpg",
+        )
+      end
+    end
+
     context "image is a JPEG" do
       let(:import_data) { whitehall_export_with_images("single_image_jpeg.json") }
 

@@ -168,7 +168,12 @@ module Tasks
           raise AbortImportError, "SVG detected: #{memo['url']}"
         end
 
-        image = ImageNormaliser.new(URI.parse(memo["url"]).open).normalise
+        begin
+          image = ImageNormaliser.new(URI.parse(memo["url"]).open).normalise
+        rescue OpenURI::HTTPError
+          raise AbortImportError, "Image does not exist: #{memo['url']}"
+        end
+
         unless image.width == 960 && image.height == 640
           raise AbortImportError, "Image must be 960x640. Dimensions were #{image.width}x#{image.height}"
         end

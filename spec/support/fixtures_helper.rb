@@ -50,5 +50,8 @@ module FixturesHelper
     binary_gif = File.open(File.join(fixtures_path, "files", "static-gif-960x640.gif"), "rb").read
     stub_request(:get, "https://assets.publishing.service.gov.uk/path/to/some/static.gif").
       to_return(status: 200, body: binary_gif)
+
+    stub_request(:get, "https://assets.publishing.service.gov.uk/does/not/exist.jpg").
+      to_return(status: 404)
   end
 end
