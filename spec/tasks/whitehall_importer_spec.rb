@@ -304,6 +304,17 @@ RSpec.describe Tasks::WhitehallImporter do
       end
     end
 
+    context "image has no caption" do
+      let(:import_data) { whitehall_export_with_images("image_without_a_caption.json") }
+
+      before { importer.import }
+
+      it "imports successfully, setting caption to empty string" do
+        expect(image_metadata_revision.caption).to eq("")
+        expect(image_blob_revision.filename).to eq("some-image.jpg")
+      end
+    end
+
     context "first image is an SVG" do
       let(:import_data) { whitehall_export_with_images("contains_svg.json") }
 
