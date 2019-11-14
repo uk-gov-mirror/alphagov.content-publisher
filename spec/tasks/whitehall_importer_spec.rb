@@ -315,6 +315,14 @@ RSpec.describe Tasks::WhitehallImporter do
       end
     end
 
+    context "image is not 960x640" do
+      let(:import_data) { whitehall_export_with_images("1000x1000.json") }
+
+      it "aborts the import" do
+        expect { importer.import }.to raise_error(Tasks::AbortImportError)
+      end
+    end
+
     context "first image is an SVG" do
       let(:import_data) { whitehall_export_with_images("contains_svg.json") }
 
