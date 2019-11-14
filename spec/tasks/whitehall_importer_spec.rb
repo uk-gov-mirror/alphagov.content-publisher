@@ -349,6 +349,16 @@ RSpec.describe Tasks::WhitehallImporter do
       end
     end
 
+    context "image is a JPEG" do
+      let(:import_data) { whitehall_export_with_images("single_image_jpeg.json") }
+
+      before { importer.import }
+
+      it "imports successfully" do
+        expect(Image::BlobRevision.first.filename).to eq("some-image.jpeg")
+      end
+    end
+
     context "first image is an SVG" do
       let(:import_data) { whitehall_export_with_images("contains_svg.json") }
 

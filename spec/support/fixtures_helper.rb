@@ -35,6 +35,10 @@ module FixturesHelper
     stub_request(:get, "https://assets.publishing.service.gov.uk/path/to/some/photo.jpg").
       to_return(status: 200, body: binary_jpg)
 
+    binary_jpeg = File.open(File.join(fixtures_path, "files", "960x640.jpeg"), "rb").read
+    stub_request(:get, "https://assets.publishing.service.gov.uk/government/uploads/system/uploads/default_news_organisation_image_data/file/42/some-image.jpeg").
+      to_return(status: 200, body: binary_jpeg)
+
     binary_jpg_1000px = File.open(File.join(fixtures_path, "files", "1000x1000.jpg"), "rb").read
     stub_request(:get, "https://assets.publishing.service.gov.uk/government/uploads/etc/1000x1000.jpg").
       to_return(status: 200, body: binary_jpg_1000px)
