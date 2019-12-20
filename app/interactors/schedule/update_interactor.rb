@@ -4,9 +4,9 @@ class Schedule::UpdateInteractor < ApplicationInteractor
   delegate :params,
            :user,
            :edition,
-           :revision,
-           :issues,
            :publish_time,
+           :issues,
+           :api_error,
            to: :context
 
   def call
@@ -27,7 +27,9 @@ private
   end
 
   def parse_publish_time
-    parser = DatetimeParser.new(issue_prefix: :schedule, **schedule_params)
+    parser = DatetimeParser.new(issue_prefix: :schedule,
+                                time: schedule_params.require(:time),
+                                date: schedule_params.require(:date))
     context.publish_time = parser.parse
     context.fail!(issues: parser.issues) if parser.issues.any?
   end
@@ -44,6 +46,9 @@ private
 
     new_scheduling = scheduling.dup.tap { |s| s.publish_time = publish_time }
     ScheduleService.call(edition, user, new_scheduling)
+  rescue GdsApi::BaseError => e
+    GovukError.notify(e)
+    context.fail!(api_error: true)
   end
 
   def create_timeline_entry
@@ -56,6 +61,5 @@ private
 
   def schedule_params
     params.require(:schedule).permit(:time, date: %i[day month year])
-      .to_h.deep_symbolize_keys
   end
 end

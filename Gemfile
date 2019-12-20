@@ -35,6 +35,7 @@ group :development do
 end
 
 group :test do
+  gem "rspec-html-matchers", "~> 0.9"
   gem "simplecov", "~> 0.17"
 end
 

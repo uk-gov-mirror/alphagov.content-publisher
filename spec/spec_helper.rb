@@ -31,11 +31,13 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
   config.include ActiveSupport::Testing::TimeHelpers
   config.include FactoryBot::Syntax::Methods
+  config.include RSpecHtmlMatchers
   config.include GdsApi::TestHelpers::PublishingApi
   config.include GdsApi::TestHelpers::AssetManager
   config.include GovukSchemas::RSpecMatchers
   config.include AuthenticationHelper, type: ->(spec) { spec.in?(%i[feature request]) }
   config.include BulkDataHelper
+  config.include AssertEditionStateExamples
 
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
 
@@ -60,5 +62,9 @@ RSpec.configure do |config|
 
   config.after :each, type: ->(spec) { spec.in?(%i[feature request]) } do
     reset_authentication
+  end
+
+  config.before :each, type: :view do
+    allow(view).to receive(:current_user).and_return(User.first)
   end
 end

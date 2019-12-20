@@ -29,7 +29,7 @@
 
 <% actions << capture do %>
   <%= form_tag(
-    destroy_image_path(document, image.image_id),
+    image_path(document, image.image_id),
     method: :delete,
     data: {
       "modal-action": "delete",
