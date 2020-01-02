@@ -1,111 +1,152 @@
 # frozen_string_literal: true
 
 RSpec.describe "Unwithdraw" do
-  describe "POST /documents/:document/unwithdraw" do
-    let(:managing_editor) { create(:user, managing_editor: true) }
-    let(:withdrawn_edition) { create(:edition, :withdrawn) }
+  let(:managing_editor) { create(:user, managing_editor: true) }
 
-    it "unwithdraws the edition" do
-      stub_publishing_api_republish(withdrawn_edition.content_id, {})
-      login_as(managing_editor)
+  it_behaves_like "requests that assert edition state",
+                  "unwithdrawing a non withdrawn edition",
+                  routes: { unwithdraw_path: %i[get post] } do
+    before { login_as(managing_editor) }
+    let(:edition) { create(:edition, :published) }
+  end
 
-      post unwithdraw_path(withdrawn_edition.document)
-      follow_redirect!
+  describe "GET /documents/:document/unwithdraw" do
+    let(:edition) { create(:edition, :withdrawn) }
 
-      expect(response.body).to include(I18n.t!("documents.history.entry_types.unwithdrawn"))
-    end
+    context "when logged in as a managing editor" do
+      let(:managing_editor) { create(:user, managing_editor: true) }
+      before { login_as(managing_editor) }
 
-    it "returns an error when publishing-api is down" do
-      publishing_api_isnt_available
-      login_as(managing_editor)
-
-      post unwithdraw_path(withdrawn_edition.document)
-      follow_redirect!
-
-      expect(response.body).to include(I18n.t!("withdraw.new.flashes.publishing_api_error.title"))
-    end
-
-    it "prevents users without managing_editor permission from unwithdrawing the edition" do
-      post unwithdraw_path(withdrawn_edition.document)
-
-      expect(response.body).to include(I18n.t!("unwithdraw.no_managing_editor_permission.title"))
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    context "when the edition is in history mode" do
-      let(:withdrawn_history_mode_edition) { create(:edition, :withdrawn, :political, government: past_government) }
-
-      it "lets users holding manage_live_history_mode permission unwithdraw the edition" do
-        stub_publishing_api_republish(withdrawn_history_mode_edition.content_id, {})
-        user = create(:user, managing_editor: true, manage_live_history_mode: true)
-        login_as(user)
-
-        post unwithdraw_path(withdrawn_history_mode_edition.document)
+      it "redirects to document summary to confirm" do
+        get unwithdraw_path(edition.document)
+        expect(response).to redirect_to(document_path(edition.document))
         follow_redirect!
+        expect(response.body)
+          .to include(I18n.t!("documents.show.unwithdraw.description"))
+      end
+    end
 
-        expect(response.body).to include(I18n.t!("documents.history.entry_types.unwithdrawn"))
+    context "when not logged in as a managing editor" do
+      it "returns a forbidden response" do
+        get unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body)
+          .to include(I18n.t!("unwithdraw.no_managing_editor_permission.title"))
+      end
+    end
+
+    context "when edition is history mode" do
+      let(:edition) do
+        create(:edition, :withdrawn, :political, government: past_government)
       end
 
-      it "prevents users without manage_live_history_mode permission from unwithdrawing the edition" do
-        login_as(managing_editor)
+      it "allows a managing editor with the manage_live_history_mode permission to confirm" do
+        user = create(:user, managing_editor: true, manage_live_history_mode: true)
+        login_as(user)
+        get unwithdraw_path(edition.document)
+        expect(response).to be_redirect
+      end
 
-        post unwithdraw_path(withdrawn_history_mode_edition.document)
+      it "prevents a managing editor without the manage_live_history_mode permission from confirming" do
+        user = create(:user, managing_editor: true, manage_live_history_mode: false)
+        login_as(user)
+        get unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body).to include(
+          I18n.t!("missing_permissions.update_history_mode.title", title: edition.title),
+        )
+      end
 
-        expect(response.body).to include(I18n.t!("missing_permissions.update_history_mode.title", title: withdrawn_history_mode_edition.title))
-        expect(response).to have_http_status(:forbidden)
+      it "prevents a regular user from confirming" do
+        get unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body).to include(
+          I18n.t!("missing_permissions.update_history_mode.title", title: edition.title),
+        )
+      end
+
+      it "prevents a regular user with the manage_live_history_mode permission from confirming" do
+        user = create(:user, manage_live_history_mode: true)
+        login_as(user)
+        get unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body)
+          .to include(I18n.t!("unwithdraw.no_managing_editor_permission.title"))
       end
     end
   end
 
-  describe "GET /documents/:document/unwithdraw" do
-    let(:managing_editor) { create(:user, managing_editor: true) }
-    let(:withdrawn_edition) { create(:edition, :withdrawn) }
+  describe "POST /documents/:document/unwithdraw" do
+    let(:edition) { create(:edition, :withdrawn) }
+    before { stub_publishing_api_republish(edition.content_id, {}) }
 
-    it "fetches unwithdraw page" do
-      login_as(managing_editor)
+    context "when logged in as a managing editor" do
+      let(:managing_editor) { create(:user, managing_editor: true) }
+      before { login_as(managing_editor) }
 
-      get unwithdraw_path(withdrawn_edition.document)
-      follow_redirect!
-
-      expect(response.body).to include(I18n.t!("documents.show.unwithdraw.title"))
-    end
-
-    it "redirects to document summary when the edition is in the wrong state" do
-      published_edition = create(:edition, :published)
-      login_as(managing_editor)
-
-      get unwithdraw_path(published_edition.document)
-
-      expect(response).to redirect_to(document_path(published_edition.document))
-    end
-
-    it "prevents users without managing_editor permission from accessing unwithdraw page" do
-      get unwithdraw_path(withdrawn_edition.document)
-
-      expect(response.body).to include(I18n.t!("unwithdraw.no_managing_editor_permission.title"))
-      expect(response).to have_http_status(:forbidden)
-    end
-
-    context "when the edition is in history mode" do
-      let(:withdrawn_history_mode_edition) { create(:edition, :withdrawn, :political, government: past_government) }
-
-      it "lets managing_editors holding manage_live_history_mode permission to access unwithdraw page" do
-        user = create(:user, managing_editor: true, manage_live_history_mode: true)
-        login_as(user)
-
-        get unwithdraw_path(withdrawn_history_mode_edition.document)
-        follow_redirect!
-
-        expect(response.body).to include(I18n.t!("documents.show.unwithdraw.title"))
+      it "redirects to document summary" do
+        post unwithdraw_path(edition.document)
+        expect(response).to redirect_to(document_path(edition.document))
       end
 
-      it "prevents users without manage_live_history_mode permission from accessing unwithdraw page" do
-        login_as(managing_editor)
+      it "redirects to document summary with an error when Publishing API is down" do
+        publishing_api_isnt_available
 
-        get unwithdraw_path(withdrawn_history_mode_edition.document)
+        post unwithdraw_path(edition.document)
+        expect(response).to redirect_to(document_path(edition.document))
+        follow_redirect!
+        expect(response.body).to include(
+          I18n.t!("documents.show.flashes.unwithdraw_error.title"),
+        )
+      end
+    end
 
-        expect(response.body).to include(I18n.t!("missing_permissions.update_history_mode.title", title: withdrawn_history_mode_edition.title))
-        expect(response).to have_http_status(:forbidden)
+    context "when not logged in as a managing editor" do
+      it "returns a forbidden response" do
+        post unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body)
+          .to include(I18n.t!("unwithdraw.no_managing_editor_permission.title"))
+      end
+    end
+
+    context "when edition is history mode" do
+      let(:edition) do
+        create(:edition, :withdrawn, :political, government: past_government)
+      end
+
+      it "allows a managing editor with the manage_live_history_mode permission to unwithdraw" do
+        user = create(:user, managing_editor: true, manage_live_history_mode: true)
+        login_as(user)
+        post unwithdraw_path(edition.document)
+        expect(response).to be_redirect
+      end
+
+      it "prevents a managing editor without the manage_live_history_mode permission from unwithdrawing" do
+        user = create(:user, managing_editor: true, manage_live_history_mode: false)
+        login_as(user)
+        post unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body).to include(
+          I18n.t!("missing_permissions.update_history_mode.title", title: edition.title),
+        )
+      end
+
+      it "prevents a regular user from unwithdrawing" do
+        post unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body).to include(
+          I18n.t!("missing_permissions.update_history_mode.title", title: edition.title),
+        )
+      end
+
+      it "prevents a regular user with the manage_live_history_mode permission from unwithdrawing" do
+        user = create(:user, manage_live_history_mode: true)
+        login_as(user)
+        post unwithdraw_path(edition.document)
+        expect(response).to be_forbidden
+        expect(response.body)
+          .to include(I18n.t!("unwithdraw.no_managing_editor_permission.title"))
       end
     end
   end
