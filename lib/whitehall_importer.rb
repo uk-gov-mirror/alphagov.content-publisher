@@ -12,6 +12,7 @@ module WhitehallImporter
       page["documents"].each do |document|
         document_import = WhitehallMigration::DocumentImport.create!(
           whitehall_document_id: document["document_id"],
+          whitehall_migration_id: whitehall_migration.id,
           state: "pending",
         )
         WhitehallDocumentImportJob.perform_later(document_import)
@@ -19,6 +20,14 @@ module WhitehallImporter
     end
 
     whitehall_migration
+  end
+
+  def self.mark_migration_completed(whitehall_migration_document_import)
+    running_states = %w(pending importing imported syncing)
+    whitehall_migration = WhitehallMigration.find(whitehall_migration_document_import.whitehall_migration_id)
+    whitehall_migration.update!(
+      end_time: Time.current
+    ) if WhitehallMigration::DocumentImport.where(whitehall_migration_id: whitehall_migration.id, status: running_states).empty?
   end
 
   def self.import_and_sync(whitehall_import)

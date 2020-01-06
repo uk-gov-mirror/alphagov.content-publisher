@@ -34,6 +34,10 @@ RSpec.describe WhitehallImporter do
     end
   end
 
+  describe ".mark_migration_completed" do
+
+  end
+
   describe ".import_and_sync" do
     let(:whitehall_export_document) { build(:whitehall_export_document) }
     let(:whitehall_migration_document_import) { build(:whitehall_migration_document_import, whitehall_document_id: "123") }

@@ -3,5 +3,6 @@
 class WhitehallDocumentImportJob < ApplicationJob
   def perform(whitehall_migration_document_import)
     WhitehallImporter.import_and_sync(whitehall_migration_document_import)
+    WhitehallImporter.mark_migration_completed(whitehall_migration_document_import)
   end
 end
