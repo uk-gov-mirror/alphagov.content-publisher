@@ -16,11 +16,12 @@ module WhitehallImporter
     def call
       ActiveRecord::Base.transaction do
         user_ids = create_users(whitehall_document["users"])
-        document_import.update!(document: create_document(user_ids))
+        document = create_document(user_ids))
+        context = Context.new(document)
 
         whitehall_document["editions"].each_with_index do |edition, edition_number|
           CreateEdition.call(
-            document_import: document_import,
+            context: context,
             current: current?(edition),
             whitehall_edition: edition,
             edition_number: edition_number + 1,
@@ -28,10 +29,15 @@ module WhitehallImporter
           )
         end
 
-        check_document_integrity(document_import.document)
+        create_timeline_entry(document.current_edition)
 
-        create_timeline_entry(document_import.document.current_edition)
-        document_import.document
+        check_document_integrity(document)
+
+        context.assets.each do |a|
+          a.document_import = document_import
+          a.save!
+        end
+        document_import.update!(document: context.document, state: "imported")
       end
     end
 
@@ -103,6 +109,15 @@ module WhitehallImporter
 
       unless integrity_checker.valid?
         raise WhitehallImporter::IntegrityCheckError.new(integrity_checker)
+      end
+    end
+
+    class Context
+      attr_reader :document, :assets
+
+      def initialize(document)
+        @document = document
+        @assets = []
       end
     end
   end

@@ -2,14 +2,14 @@
 
 module WhitehallImporter
   class CreateImageRevision
-    attr_reader :document_import, :whitehall_image, :filenames
+    attr_reader :context, :whitehall_image, :filenames
 
     def self.call(*args)
       new(*args).call
     end
 
-    def initialize(document_import, whitehall_image, filenames = [])
-      @document_import = document_import
+    def initialize(context, whitehall_image, filenames = [])
+      @context = context
       @whitehall_image = whitehall_image
       @filenames = filenames
     end
@@ -64,14 +64,13 @@ module WhitehallImporter
     end
 
     def record_assets(revision)
-      WhitehallMigration::AssetImport.create!(
-        document_import: document_import,
+      context.assets << WhitehallMigration::AssetImport.new(
         image_revision: revision,
         original_asset_url: whitehall_image["url"],
       )
+
       whitehall_image["variants"].each do |variant, url|
-        WhitehallMigration::AssetImport.create!(
-          document_import: document_import,
+        context.assets << WhitehallMigration::AssetImport.new(
           image_revision: revision,
           original_asset_url: url,
           variant: variant,

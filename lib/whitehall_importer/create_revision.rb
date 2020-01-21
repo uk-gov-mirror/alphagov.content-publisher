@@ -2,9 +2,9 @@
 
 module WhitehallImporter
   class CreateRevision
-    attr_reader :document_import, :whitehall_edition
+    attr_reader :context, :whitehall_edition
 
-    delegate :document, to: :document_import
+    delegate :document, :assets, to: :context
 
     SUPPORTED_DOCUMENT_TYPES = %w(news_story press_release).freeze
     DOCUMENT_SUB_TYPES = %w[
@@ -18,8 +18,8 @@ module WhitehallImporter
       new(*args).call
     end
 
-    def initialize(document_import, whitehall_edition)
-      @document_import = document_import
+    def initialize(context, whitehall_edition)
+      @context = context
       @whitehall_edition = whitehall_edition
     end
 
@@ -118,12 +118,11 @@ module WhitehallImporter
 
     def find_or_create_image_revisions(images)
       images.reduce([]) do |memo, image|
-        already_imported = WhitehallMigration::AssetImport.find_by(original_asset_url: image["url"])
+        already_imported = assets.find { |a| a.original_asset_url == image["url"] }
         revision = if already_imported
                      already_imported.image_revision
                    else
-                     WhitehallImporter::CreateImageRevision
-                       .call(document_import, image, memo.map(&:filename))
+                     CreateImageRevision.call(context, image, memo.map(&:filename))
                    end
         memo << revision
       end
