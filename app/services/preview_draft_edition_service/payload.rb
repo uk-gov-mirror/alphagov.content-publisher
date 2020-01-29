@@ -30,13 +30,10 @@ class PreviewDraftEditionService::Payload
       "links" => links,
       "access_limited" => access_limited,
       "auth_bypass_ids" => auth_bypass_ids,
+      "change_note" => history.change_note,
+      "first_published_at" = history.first_published_at,
+      "public_updated_at" = history.public_updated_at,
     }
-    payload["change_note"] = edition.change_note if edition.major?
-
-    if edition.backdated_to.present?
-      payload["first_published_at"] = edition.backdated_to
-      payload["public_updated_at"] = edition.backdated_to if edition.first?
-    end
 
     if republish
       payload["update_type"] = "republish"
@@ -47,6 +44,10 @@ class PreviewDraftEditionService::Payload
   end
 
 private
+
+  def history
+    @history ||= History.new(ediiton)
+  end
 
   def access_limited
     return {} unless edition.access_limit
@@ -82,7 +83,10 @@ private
   end
 
   def details
-    details = { "political" => edition.political? }
+    details = {
+      "political" => edition.political?,
+      "change_history" => history.change_history,
+    }
 
     document_type.contents.each do |field|
       details[field.id] = perform_input_type_specific_transformations(field)
@@ -117,6 +121,66 @@ private
       GovspeakDocument.new(edition.contents[field.id], edition).payload_html
     else
       document.contents[field.id]
+    end
+  end
+
+  # This expects the following changes to Content Publisher modelling
+  # - Document
+  #   - first_published_at - a timestamp that matches when the content was
+  #     first published in the Publishing API (or whichever app it was first
+  #     published by) (currently in Content Publisher this is set by current
+  #     time)
+  # - Edition
+  #   - published_at - a timestamp that is populated with the time from the
+  #     Publishing API (or original publishing app) that the content was
+  #     published
+  # - Revision
+  #   - change_note - no longer stores the initial "First published." change
+  #     note as this is special and not entered by a user.
+  #   - change_history - stores an array of hashes of past change notes. Does
+  #     not include the special first published note
+  class History
+    FIRST_CHANGE_NOTE = "First published."
+
+    def initialize(edition)
+      @edition = edition
+    end
+
+    def public_updated_at
+      return edition.backdated_to if edition.backdated_to.present? && edition.first
+      return if !edition.published_at && edition.major
+
+      change_history.first&.fetch(:public_timestamp)
+    end
+
+    def first_published_at
+      return edition.backdated_to if edition.backdated_to.present?
+
+      edition.document.first_published_at
+    end
+
+    def change_note
+      return if edition.published_at || !edition.major?
+
+      edition.first? ? FIRST_CHANGE_NOTE : edition.change_note
+    end
+
+    def change_history
+      return [] unless edition.document.first_published_at
+
+      change_history = edition.change_history.map do |item|
+        { note: item.fetch(:note), public_timestamp: item.fetch(:public_timestamp).in_time_zone }
+      end
+
+      change_history << { note: FIRST_CHANGE_NOTE, public_timestamp: first_published_at }
+
+      if edition.change_note && edition.major && edition.published_at
+        change_history << { note: edition.change_note, public_timestamp: edition.published_at }
+      end
+
+      change_history.reject { |note| note[:public_timestamp] < first_published_at }
+                    .sort_by { |note| note[:public_timestamp] }
+                    .reverse
     end
   end
 end
