@@ -10,11 +10,12 @@ class PublishDraftEditionService < ApplicationService
   def call
     live_edition = document.live_edition
     publish_assets(live_edition)
+    set_publishing_time
     associate_with_government
+    update_publishing_api_draft
     publish_current_edition
     supersede_live_edition(live_edition)
     set_new_live_edition
-    set_first_published_at
     document.reload
   rescue GdsApi::BaseError => e
     GovukError.notify(e)
@@ -29,6 +30,12 @@ private
   def publish_assets(live_edition)
     PublishAssetsService.call(edition, live_edition)
   end
+  
+  def set_publishing_time
+    now = Time.current
+    edition.published_at = now
+    document.first_published_at = now unless document.first_published_at
+  end
 
   def associate_with_government
     return if edition.government
@@ -39,10 +46,7 @@ private
                  else
                    repository.current
                  end
-    edition.assign_attributes(government_id: government&.content_id)
-
-    # We need to update the Publishing API if we're changing the government
-    PreviewDraftEditionService.call(edition) if edition.government_id_changed?
+    edition.government_id = government&.content_id
   end
 
   def publish_current_edition
@@ -51,6 +55,12 @@ private
       nil, # Sending update_type is deprecated (now in payload)
       locale: document.locale,
     )
+  end
+
+  def update_publishing_api_draft
+    return if edition.minor? && !edition.government_id_changed?
+    
+    PreviewDraftEditionService.call(edition)
   end
 
   def supersede_live_edition(live_edition)
@@ -67,11 +77,5 @@ private
     edition.access_limit = nil
     edition.live = true
     edition.save!
-  end
-
-  def set_first_published_at
-    return if document.first_published_at
-
-    document.update!(first_published_at: Time.current)
   end
 end
