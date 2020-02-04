@@ -30,7 +30,6 @@ class PreviewDraftEditionService::Payload
       "links" => links,
       "access_limited" => access_limited,
       "auth_bypass_ids" => auth_bypass_ids,
-      "change_note" => history.change_note,
       "first_published_at" = history.first_published_at,
       "public_updated_at" = history.public_updated_at,
     }
@@ -127,13 +126,10 @@ private
   # This expects the following changes to Content Publisher modelling
   # - Document
   #   - first_published_at - a timestamp that matches when the content was
-  #     first published in the Publishing API (or whichever app it was first
-  #     published by) (currently in Content Publisher this is set by current
-  #     time)
+  #     first published in Content Publisher.
   # - Edition
-  #   - published_at - a timestamp that is populated with the time from the
-  #     Publishing API (or original publishing app) that the content was
-  #     published
+  #   - published_at - a timestamp that when the content is first published
+  #     in Content Publisher.
   # - Revision
   #   - change_note - no longer stores the initial "First published." change
   #     note as this is special and not entered by a user.
@@ -147,9 +143,6 @@ private
     end
 
     def public_updated_at
-      return edition.backdated_to if edition.backdated_to.present? && edition.first
-      return if !edition.published_at && edition.major
-
       change_history.first&.fetch(:public_timestamp)
     end
 
@@ -159,22 +152,14 @@ private
       edition.document.first_published_at
     end
 
-    def change_note
-      return if edition.published_at || !edition.major?
-
-      edition.first? ? FIRST_CHANGE_NOTE : edition.change_note
-    end
-
     def change_history
-      return [] unless edition.document.first_published_at
-
       change_history = edition.change_history.map do |item|
         { note: item.fetch(:note), public_timestamp: item.fetch(:public_timestamp).in_time_zone }
       end
 
       change_history << { note: FIRST_CHANGE_NOTE, public_timestamp: first_published_at }
 
-      if edition.change_note && edition.major && edition.published_at
+      if edition.change_note && edition.major
         change_history << { note: edition.change_note, public_timestamp: edition.published_at }
       end
 
