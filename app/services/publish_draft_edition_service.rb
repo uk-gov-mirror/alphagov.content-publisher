@@ -8,15 +8,13 @@ class PublishDraftEditionService < ApplicationService
   end
 
   def call
-    live_edition = document.live_edition
-    publish_assets(live_edition)
+    publish_assets
     set_publishing_time
     associate_with_government
     update_publishing_api_draft
     publish_current_edition
-    supersede_live_edition(live_edition)
+    supersede_live_edition
     set_new_live_edition
-    document.reload
   rescue GdsApi::BaseError => e
     GovukError.notify(e)
     raise
@@ -27,8 +25,8 @@ private
   attr_reader :edition, :user, :with_review
   delegate :document, to: :edition
 
-  def publish_assets(live_edition)
-    PublishAssetsService.call(edition, live_edition)
+  def publish_assets
+    PublishAssetsService.call(edition, document.live_edition)
   end
   
   def set_publishing_time
@@ -63,7 +61,8 @@ private
     PreviewDraftEditionService.call(edition)
   end
 
-  def supersede_live_edition(live_edition)
+  def supersede_live_edition
+    live_edition = document.live_edition
     return unless live_edition
 
     AssignEditionStatusService.call(live_edition, user, :superseded, record_edit: false)
@@ -77,5 +76,6 @@ private
     edition.access_limit = nil
     edition.live = true
     edition.save!
+    document.reload_live_edition
   end
 end
