@@ -8,6 +8,7 @@ class PublishDraftEditionService < ApplicationService
   end
 
   def call
+    check_publishable
     publish_assets
     set_publishing_time
     associate_with_government
@@ -25,6 +26,11 @@ private
   attr_reader :edition, :user, :with_review
   delegate :document, to: :edition
 
+  def check_publishable
+    raise "Only a current edition can be published" unless edition.current?
+    raise "Live editions cannot be published" if edition.live?
+  end
+  
   def publish_assets
     PublishAssetsService.call(edition, document.live_edition)
   end
