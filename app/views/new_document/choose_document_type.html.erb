@@ -1,30 +1,30 @@
-<% content_for :browser_title, t("supertypes.#{@supertype.id}.label") %>
+<%# content_for :browser_title, t("supertypes.#{@document_type_selection.id}.label") %>
+<% content_for :browser_title, t("new_document.choose_supertype.title") %>
 <% content_for :back_link, render_back_link(href: new_document_path) %>
 
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
     <%= form_tag create_document_path, data: { gtm: "confirm-document-type" } do %>
       <%= render "govuk_publishing_components/components/radio", {
-        heading: t("supertypes.#{@supertype.id}.label"),
+        heading: t("new_document.choose_supertype.title"),#t("supertypes.#{@supertype.id}.label"),
         is_page_heading: true,
         name: "document_type",
         error_items: @issues&.items_for(:document_type),
-        items: @supertype.document_types.map { |document_type|
+        items: @document_type_selection.options.map { |option|
           {
-            value: document_type.id,
-            text: document_type.label,
-            hint_text: I18n.exists?("document_types.#{document_type.id}.description") ? t("document_types.#{document_type.id}.description") : nil,
+            value: option["id"],
+            text: option["id"], # TODO: `t_doctype(option["id"], "label")` - can't use because no label on document types
+            hint_text: t_doctype(option["id"], "description"),
             data_attributes: {
               gtm: "choose-document-type",
-              "gtm-value": document_type.label,
+              "gtm-value": option["label"],
             },
-            conditional: I18n.exists?("document_types.#{document_type.id}.guidance.body_govspeak") ? render_govspeak(t("document_types.#{document_type.id}.guidance.body_govspeak")) : nil,
+            conditional: I18n.exists?("document_types.#{option['id']}.guidance.body_govspeak") ? render_govspeak(t("document_types.#{option['id']}.guidance.body_govspeak")) : nil,
             bold: true,
           }
         }
       } %>
 
-      <%= hidden_field(nil, :supertype, value: @supertype.id) %>
       <%= render "govuk_publishing_components/components/button", text: "Continue", margin_bottom: true %>
     <% end %>
   </div>

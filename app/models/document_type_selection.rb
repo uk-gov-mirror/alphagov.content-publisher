@@ -3,11 +3,21 @@
 class DocumentTypeSelection
   include InitializeWithHash
 
-  attr_reader :id, :options
+  attr_reader :id, :type, :options
 
-  def self.find(id)
-    item = all.find { |document_type_selection| document_type_selection.id == id }
-    item || (raise RuntimeError, "Document type selection #{id} not found")
+  def self.find_page(id)
+    all.find { |document_type_selection| document_type_selection.id == id }
+  end
+
+  def self.find_option(id)
+    all.each do |document_type_selection|
+      document_type_selection.options.each do |key, val|
+        if key["id"] == id
+          return key
+        end
+      end
+    end
+    throw "NO OPTION #{id}"
   end
 
   def self.all
@@ -16,7 +26,7 @@ class DocumentTypeSelection
 
       hashes.map do |hash|
         hash["options"].map! do |option|
-          SelectionOption.new(option).hash
+          SelectionOption.new(option).hash.stringify_keys
         end
         new(hash)
       end

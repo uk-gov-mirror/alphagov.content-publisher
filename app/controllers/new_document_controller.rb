@@ -2,37 +2,28 @@
 
 class NewDocumentController < ApplicationController
   def choose_document_type
-    result = NewDocument::ChooseSupertypeInteractor.call(params: params, user: current_user)
-    issues, @supertype = result.to_h.values_at(:issues, :supertype)
-
-    if result.issues
-      flash.now["requirements"] = { "items" => issues.items }
-
-      render :choose_supertype,
-             assigns: { issues: issues },
-             status: :unprocessable_entity
-    elsif @supertype.managed_elsewhere
-      redirect_to @supertype.managed_elsewhere_url
-    end
+    @document_type_selection = DocumentTypeSelection.find_page(params[:document_type] || "root")
   end
 
   def create
-    result = NewDocument::CreateInteractor.call(params: params, user: current_user)
-    issues, supertype, document_type, document = result.to_h.values_at(:issues,
-                                                                       :supertype,
-                                                                       :document_type,
-                                                                       :document)
+    result = NewDocument::DocumentTypeSelectionInteractor.call(params: params, user: current_user)
+    issues, document, redirect_url, needs_refining = result.to_h.values_at(:issues,
+                                                                           :document,
+                                                                           :redirect_url,
+                                                                           :needs_refining)
 
     if issues
       flash.now["requirements"] = { "items" => issues.items }
 
       render :choose_document_type,
-             assigns: { issues: issues, supertype: supertype },
+             assigns: { issues: issues, document_type_selection: DocumentTypeSelection.find(params[:document_type]) },
              status: :unprocessable_entity
-    elsif result.managed_elsewhere
-      redirect_to document_type.managed_elsewhere_url
-    else
+    elsif needs_refining
+      redirect_to new_document_path(document_type: params[:document_type])
+    elsif document
       redirect_to content_path(document)
+    elsif redirect_url
+      redirect_to redirect_url
     end
   end
 end
