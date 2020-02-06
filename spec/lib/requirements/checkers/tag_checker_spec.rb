@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-RSpec.describe Requirements::TagChecker do
+RSpec.describe Requirements::Checkers::TagChecker do
   describe "#pre_publish_issues" do
     it "returns no issues when there are none" do
       edition = build(:edition)
-      issues = Requirements::TagChecker.new(edition).pre_publish_issues
+      issues = Requirements::Checkers::TagChecker.new(edition).pre_publish_issues
       expect(issues.items).to be_empty
     end
 
@@ -17,7 +17,7 @@ RSpec.describe Requirements::TagChecker do
 
       it "returns an issue when the primary org is blank" do
         edition = build(:edition, document_type: document_type)
-        issues = Requirements::TagChecker.new(edition).pre_publish_issues
+        issues = Requirements::Checkers::TagChecker.new(edition).pre_publish_issues
 
         expect(issues).to have_issue(:primary_publishing_organisation,
                                      :blank,
@@ -31,7 +31,7 @@ RSpec.describe Requirements::TagChecker do
                           primary_publishing_organisation: %w[my-org],
                         })
 
-        issues = Requirements::TagChecker.new(edition).pre_publish_issues
+        issues = Requirements::Checkers::TagChecker.new(edition).pre_publish_issues
         expect(issues.items).to be_empty
       end
     end

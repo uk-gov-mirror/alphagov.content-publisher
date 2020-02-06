@@ -30,7 +30,7 @@ private
   end
 
   def check_for_issues
-    issues = Requirements::WithdrawalChecker.new(params[:public_explanation], edition)
+    issues = Requirements::Checkers::WithdrawalChecker.new(params[:public_explanation], edition)
                                             .pre_withdrawal_issues
     context.fail!(issues: issues) if issues.any?
   end

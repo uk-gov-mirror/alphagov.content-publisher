@@ -35,7 +35,7 @@ private
   end
 
   def check_for_issues
-    checker = Requirements::TagChecker.new(edition, revision)
+    checker = Requirements::Checkers::TagChecker.new(edition, revision)
     issues = checker.pre_publish_issues
 
     context.fail!(issues: issues) if issues.any?

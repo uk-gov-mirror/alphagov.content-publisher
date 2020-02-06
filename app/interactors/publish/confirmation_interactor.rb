@@ -23,7 +23,7 @@ private
   end
 
   def check_for_issues
-    issues = Requirements::EditionChecker.new(edition)
+    issues = Requirements::Checkers::EditionChecker.new(edition)
                                          .pre_publish_issues(rescue_api_errors: false)
 
     context.fail!(issues: issues) if issues.any?

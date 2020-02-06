@@ -22,7 +22,7 @@ private
   end
 
   def check_for_issues
-    issues = Requirements::VideoEmbedChecker.new
+    issues = Requirements::Checkers::VideoEmbedChecker.new
       .pre_embed_issues(title: title, url: url)
 
     context.fail!(issues: issues) if issues.any?

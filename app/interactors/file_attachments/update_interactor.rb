@@ -34,7 +34,7 @@ private
   end
 
   def check_for_issues
-    checker = Requirements::FileAttachmentChecker.new(file: attachment_params[:file],
+    checker = Requirements::Checkers::FileAttachmentChecker.new(file: attachment_params[:file],
                                                       title: attachment_params[:title])
     issues = checker.pre_update_issues
 

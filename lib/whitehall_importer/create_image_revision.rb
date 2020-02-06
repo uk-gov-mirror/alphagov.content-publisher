@@ -54,7 +54,7 @@ module WhitehallImporter
     end
 
     def normalise_image(file)
-      upload_checker = Requirements::ImageUploadChecker.new(file)
+      upload_checker = Requirements::Checkers::ImageUploadChecker.new(file)
       abort_on_issue(upload_checker.issues)
 
       stripped_image = MiniMagick::Image.open(file.path).strip

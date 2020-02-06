@@ -24,14 +24,14 @@ class Schedule::NewInteractor < ApplicationInteractor
   end
 
   def check_for_publish_issues
-    issues = Requirements::EditionChecker.new(edition)
+    issues = Requirements::Checkers::EditionChecker.new(edition)
                                          .pre_publish_issues(rescue_api_errors: false)
 
     context.fail!(publish_issues: issues) if issues.any?
   end
 
   def check_for_schedule_issues
-    issues = Requirements::PublishTimeChecker.new(edition.proposed_publish_time)
+    issues = Requirements::Checkers::PublishTimeChecker.new(edition.proposed_publish_time)
                                              .issues
     context.fail!(schedule_issues: issues) if issues.any?
   end

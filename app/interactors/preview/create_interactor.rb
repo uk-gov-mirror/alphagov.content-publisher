@@ -24,7 +24,7 @@ private
   end
 
   def check_for_issues
-    issues = Requirements::EditionChecker.new(edition).pre_preview_issues
+    issues = Requirements::Checkers::EditionChecker.new(edition).pre_preview_issues
     context.fail!(issues: issues) if issues.any?
   end
 

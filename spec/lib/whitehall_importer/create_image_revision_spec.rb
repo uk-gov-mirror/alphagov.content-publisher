@@ -53,7 +53,7 @@ RSpec.describe WhitehallImporter::CreateImageRevision do
       end
 
       it "should pass through ImageUploadChecker and raise a WhitehallImporter::AbortImportError" do
-        expect(Requirements::ImageUploadChecker).to receive(:new).and_call_original
+        expect(Requirements::Checkers::ImageUploadChecker).to receive(:new).and_call_original
         expect { described_class.call(document_import, whitehall_image) }.to raise_error(
           WhitehallImporter::AbortImportError,
           I18n.t!("requirements.image_upload.unsupported_type.form_message"),

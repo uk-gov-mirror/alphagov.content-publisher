@@ -34,7 +34,7 @@ private
   end
 
   def check_for_issues
-    issues = Requirements::PublishTimeChecker.new(publish_time).issues
+    issues = Requirements::Checkers::PublishTimeChecker.new(publish_time).issues
     issues += action_issues if params[:wizard] == "schedule"
     context.fail!(issues: issues) if issues.any?
   end
