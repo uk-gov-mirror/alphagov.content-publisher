@@ -157,15 +157,21 @@ private
         { note: item.fetch(:note), public_timestamp: item.fetch(:public_timestamp).in_time_zone }
       end
 
-      change_history << { note: FIRST_CHANGE_NOTE, public_timestamp: first_published_at }
+      change_history << { note: FIRST_CHANGE_NOTE,
+                          public_timestamp: first_published_at || Time.current }
 
       if edition.change_note && edition.major
-        change_history << { note: edition.change_note, public_timestamp: edition.published_at }
+        change_history << { note: edition.change_note,
+                            public_timestamp: time || Time.current }
       end
 
       change_history.reject { |note| note[:public_timestamp] < first_published_at }
                     .sort_by { |note| note[:public_timestamp] }
                     .reverse
     end
+
+  private
+
+    attr_reader :edition
   end
 end
