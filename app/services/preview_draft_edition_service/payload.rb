@@ -84,7 +84,7 @@ private
   def details
     details = {
       "political" => edition.political?,
-      "change_history" => history.change_history,
+      "change_history" => history.change_history.as_json,
     }
 
     document_type.contents.each do |field|
