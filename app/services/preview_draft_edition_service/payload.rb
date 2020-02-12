@@ -160,7 +160,7 @@ private
       change_history << { note: FIRST_CHANGE_NOTE,
                           public_timestamp: first_published_at || Time.current }
 
-      if edition.change_note && edition.major
+      if edition.change_note && edition.major && !edition.first?
         change_history << { note: edition.change_note,
                             public_timestamp: time || Time.current }
       end
