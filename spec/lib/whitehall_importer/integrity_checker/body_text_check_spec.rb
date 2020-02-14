@@ -4,6 +4,16 @@ RSpec.describe WhitehallImporter::IntegrityChecker::BodyTextCheck do
     expect(integrity_check.sufficiently_similar?).to be true
   end
 
+  it "does not return a problem when the body text whitespace does not match" do
+    integrity_check = WhitehallImporter::IntegrityChecker::BodyTextCheck.new("Some text", "Some     text")
+    expect(integrity_check.sufficiently_similar?).to be true
+  end
+
+  it "does not return a problem when the HTML does not match" do
+    integrity_check = WhitehallImporter::IntegrityChecker::BodyTextCheck.new("<b>Some text</b>", "Some text")
+    expect(integrity_check.sufficiently_similar?).to be true
+  end
+
   it "returns a problem when the body text doesn't match" do
     integrity_check = WhitehallImporter::IntegrityChecker::BodyTextCheck.new("Some text", "Some different text")
     expect(integrity_check.sufficiently_similar?).to be false
