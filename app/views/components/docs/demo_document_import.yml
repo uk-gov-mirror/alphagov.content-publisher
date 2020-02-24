@@ -1,0 +1,8 @@
+name: Demo Document Import
+description: Quick demo to explore how a document import can be displayed
+accessibility_criteria: |
+  The component must:
+
+  * update its content to reflect changes in the referenced input field
+examples:
+  default:

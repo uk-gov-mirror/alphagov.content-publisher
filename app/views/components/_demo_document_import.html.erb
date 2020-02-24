@@ -1,0 +1,68 @@
+<%
+  items = [
+    {
+      link: {
+        text: SecureRandom.uuid,
+        path: "/whitehall-migration/1/document-import/1",
+      },
+      metadata: {
+        status: "Pending",
+      },
+      subtext: 'View: <a href="">Whitehall</a>'.html_safe,
+    },
+    {
+      link: {
+        text: "Changes to international trade mark registrations from 1 January 2021",
+        path: "/whitehall-migration/1/document-import/1",
+      },
+      metadata: {
+        status: "Imported",
+      },
+      subtext: 'View: <a href="">Whitehall</a> <a href="">Content Publisher</a>'.html_safe,
+    },
+    {
+      link: {
+        text: SecureRandom.uuid,
+        path: "/whitehall-migration/1/document-import/1",
+      },
+      metadata: {
+        status: "Import Aborted",
+        error_message: "#<NoMethodError: undefined method `whitehall_export' for GdsApi:Module>"
+      },
+      subtext: 'View: <a href="">Whitehall</a>'.html_safe,
+    },
+    {
+      link: {
+        text: SecureRandom.uuid,
+        path: "/whitehall-migration/1/document-import/1",
+      },
+      metadata: {
+        status: "Import Failed",
+        error_message: "#<NoMethodError: undefined method `whitehall_export' for GdsApi:Module>"
+      },
+      subtext: 'View: <a href="">Whitehall</a>'.html_safe,
+    },
+    {
+      link: {
+        text: "Changes to international trade mark registrations from 1 January 2021",
+        path: "/whitehall-migration/1/document-import/1",
+      },
+      metadata: {
+        status: "Sync Failed",
+        error_message: "#<NoMethodError: undefined method `whitehall_export' for GdsApi:Module>",
+      },
+      subtext: 'View: <a href="">Whitehall</a> <a href="">Content Publisher</a>'.html_safe,
+    },
+    {
+      link: {
+        text: "Changes to international trade mark registrations from 1 January 2021",
+        path: "/whitehall-migration/1/document-import/1",
+      },
+      metadata: {
+        status: "Completed",
+      },
+      subtext: 'View: <a href="">Whitehall</a> <a href="">Content Publisher</a> <a href="">GOV.UK</a>'.html_safe,
+    },
+  ]
+%>
+<%= render "govuk_publishing_components/components/document_list", items: items %>
