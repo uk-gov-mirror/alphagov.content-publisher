@@ -28,7 +28,8 @@ module WhitehallImporter
                 else
                   state = MigrateState.call(whitehall_edition["state"], whitehall_edition["force_published"])
                   status = build_status(state)
-                  create_edition(status: status, current: current, edition_number: edition_number)
+                  create_edition(status: status, current: current, edition_number: edition_number,
+                                 publish_event: history.last_state_event("published"))
                 end
 
       create_revision_history(edition)
@@ -59,6 +60,7 @@ module WhitehallImporter
         current: false,
         edition_number: edition_number,
         last_event: unpublishing_event,
+        publish_event: history.last_state_event!("published"),
       )
 
       create_edition(
@@ -71,7 +73,8 @@ module WhitehallImporter
 
     def create_removed_edition
       removed_status = build_status("removed", build_removal)
-      create_edition(status: removed_status, current: current, edition_number: edition_number)
+      create_edition(status: removed_status, current: current, edition_number: edition_number,
+                     publish_event: history.last_state_event!("published"))
     end
 
     def check_only_in_english
@@ -143,7 +146,7 @@ module WhitehallImporter
       )
     end
 
-    def create_edition(status:, edition_number:, current:, create_event: nil, last_event: nil)
+    def create_edition(status:, edition_number:, current:, create_event: nil, last_event: nil, publish_event: nil)
       create_event ||= history.create_event!
       last_event ||= whitehall_edition["revision_history"].last
 
@@ -162,6 +165,7 @@ module WhitehallImporter
         created_by_id: user_ids[create_event["whodunnit"]],
         last_edited_at: last_event["created_at"],
         last_edited_by_id: user_ids[last_event["whodunnit"]],
+        published_at: publish_event && publish_event["created_at"],
         editor_ids: editor_ids,
       )
     end
