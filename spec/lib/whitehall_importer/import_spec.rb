@@ -134,6 +134,103 @@ RSpec.describe WhitehallImporter::Import do
       expect(document_import.document.created_by).to eq(user)
     end
 
+    it "generates a list of document change history" do
+      first_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: whitehall_user["id"]),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.last_year.rfc3339,
+                                 whodunnit: whitehall_user["id"])],
+      )
+      second_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        change_note: "Some great changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: whitehall_user["id"]),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.last_month.rfc3339,
+                                 whodunnit: whitehall_user["id"])],
+      )
+      third_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        change_note: "Some incredible changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: whitehall_user["id"]),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.last_week.rfc3339,
+                                 whodunnit: whitehall_user["id"])],
+      )
+      fourth_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        minor_change: true,
+        change_note: "",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: whitehall_user["id"]),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.yesterday.rfc3339,
+                                 whodunnit: whitehall_user["id"])],
+      )
+      fifth_edition = build(
+        :whitehall_export_edition,
+        state: "published",
+        change_note: "Some fantastic changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: whitehall_user["id"]),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.at_beginning_of_day.rfc3339,
+                                 whodunnit: whitehall_user["id"])],
+      )
+      sixth_edition = build(
+        :whitehall_export_edition,
+        change_note: "Some glorious changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 whodunnit: whitehall_user["id"])],
+      )
+
+      whitehall_export = build(:whitehall_export_document,
+                               users: [whitehall_user],
+                               editions: [first_edition, second_edition, third_edition,
+                                          fourth_edition, fifth_edition, sixth_edition])
+
+      stub_whitehall_document_export(
+        document_import.whitehall_document_id, whitehall_export
+      )
+
+      expect(WhitehallImporter::CreateEdition).to receive(:call).with(
+        hash_including(document_change_history: [
+          { "edition_number" => 2, "change_history_entry" => {
+            "id" => anything, "note" => "Some great changes",
+            "public_timestamp" => Time.current.last_month.rfc3339
+} },
+          { "edition_number" => 3, "change_history_entry" => {
+            "id" => anything, "note" => "Some incredible changes",
+            "public_timestamp" => Time.current.last_week.rfc3339
+} },
+          { "edition_number" => 5, "change_history_entry" => {
+            "id" => anything, "note" => "Some fantastic changes",
+            "public_timestamp" => Time.current.at_beginning_of_day.rfc3339
+} },
+        ]),
+      ).exactly(6).times.and_call_original
+
+      described_class.call(document_import)
+    end
+
     it "sets current boolean on whether edition is current or not" do
       past_edition = build(
         :whitehall_export_edition,

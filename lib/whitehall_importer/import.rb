@@ -35,6 +35,7 @@ module WhitehallImporter
             whitehall_edition: edition,
             edition_number: edition_number + 1,
             user_ids: user_ids,
+            document_change_history: document_change_history.compact,
           )
         end
 
@@ -51,6 +52,28 @@ module WhitehallImporter
     end
 
   private
+
+    def document_change_history
+      @document_change_history ||= begin
+        whitehall_document["editions"].map.with_index do |edition, index|
+          publish_event = EditionHistory.new(edition["revision_history"]).last_state_event("published")
+          edition_number = index + 1
+
+          next if edition_number == 1
+          next if edition["change_note"].blank?
+          next if publish_event.blank?
+
+          {
+            "edition_number" => edition_number,
+            "change_history_entry" => {
+              "id" => SecureRandom.uuid,
+              "note" => edition["change_note"],
+              "public_timestamp" => publish_event["created_at"],
+            },
+          }
+        end
+      end
+    end
 
     def whitehall_document
       @whitehall_document ||= GdsApi.whitehall_export
