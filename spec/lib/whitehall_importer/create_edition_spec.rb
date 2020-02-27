@@ -14,6 +14,90 @@ RSpec.describe WhitehallImporter::CreateEdition do
       expect(edition.update_type).to eq("major")
     end
 
+    it "generates a list of document change history" do
+      first_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: 1),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.last_year.rfc3339,
+                                 whodunnit: 1)],
+      )
+      second_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        change_note: "Some great changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: 1),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.last_month.rfc3339,
+                                 whodunnit: 1)],
+      )
+      third_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        change_note: "Some incredible changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: 1),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.last_week.rfc3339,
+                                 whodunnit: 1)],
+      )
+      fourth_edition = build(
+        :whitehall_export_edition,
+        state: "superseded",
+        minor_change: true,
+        change_note: "",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: 1),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.yesterday.rfc3339,
+                                 whodunnit: 1)],
+      )
+      fifth_edition = build(
+        :whitehall_export_edition,
+        state: "published",
+        change_note: "Some fantastic changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 state: "superseded",
+                                 whodunnit: 1),
+                           build(:whitehall_export_revision_history_event,
+                                 state: "published",
+                                 created_at: Time.current.at_beginning_of_day.rfc3339,
+                                 whodunnit: 1)],
+      )
+      sixth_edition = build(
+        :whitehall_export_edition,
+        change_note: "Some glorious changes",
+        revision_history: [build(:whitehall_export_revision_history_event,
+                                 whodunnit: 1)],
+      )
+
+      whitehall_export = build(:whitehall_export_document,
+                               users: [1],
+                               editions: [first_edition, second_edition, third_edition,
+                                          fourth_edition, fifth_edition, sixth_edition])
+
+      document_import = build(:whitehall_migration_document_import, document: document, payload: whitehall_export)
+
+      editions = [first_edition, second_edition, third_edition, fourth_edition, fifth_edition]
+      editions.each_with_index do |edition, index|
+        described_class.call(document_import: document_import, whitehall_edition: edition,
+                             current: false, edition_number: index + 1, user_ids: user_ids)
+      end
+
+      described_class.call(document_import: document_import, whitehall_edition: sixth_edition, edition_number: 6)
+    end
+
     it "can set minor update type" do
       whitehall_edition = build(:whitehall_export_edition, minor_change: true)
       edition = described_class.call(document_import: document_import, whitehall_edition: whitehall_edition)

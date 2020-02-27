@@ -27,9 +27,10 @@ module WhitehallImporter
                   create_removed_edition
                 else
                   state = MigrateState.call(whitehall_edition["state"], whitehall_edition["force_published"])
-                  status = build_status(state)
+                  revision = create_revision(change_history)
+                  status = build_status(revision, state)
                   create_edition(status: status, current: current, edition_number: edition_number,
-                                 publish_event: history.last_state_event("published"))
+                                 publish_event: history.last_state_event("published"), revision: revision)
                 end
 
       create_revision_history(edition)
@@ -41,12 +42,31 @@ module WhitehallImporter
 
   private
 
-    def revision
-      @revision ||= CreateRevision.call(document_import, whitehall_edition)
+    def create_revision(change_history)
+      CreateRevision.call(document_import, whitehall_edition, change_history)
     end
 
     def history
       @history ||= EditionHistory.new(whitehall_edition["revision_history"])
+    end
+
+    def change_history(number: edition_number)
+      return [] if [1,2].include?(number)
+
+      previous_whitehall_edition = document_import.payload["editions"][number - 2]
+      previous_edition = document_import.document.editions.find_by(number: number - 1)
+      publish_event = EditionHistory.new(previous_whitehall_edition["revision_history"])
+                                    .last_state_event!("published")
+
+      if previous_whitehall_edition["change_note"].present?
+        previous_edition.change_history << {
+          "id" => SecureRandom.uuid,
+          "note" => previous_whitehall_edition["change_note"],
+          "public_timestamp" => publish_event["created_at"],
+        }
+      else
+        previous_edition.change_history
+      end
     end
 
     def unpublished_edition?
@@ -54,27 +74,33 @@ module WhitehallImporter
     end
 
     def split_unpublished_edition
+      removed_revision = create_revision(change_history)
       unpublishing_event = history.last_unpublishing_event!
       create_edition(
-        status: build_status("removed", build_removal),
+        status: build_status(removed_revision, "removed", build_removal),
         current: false,
         edition_number: edition_number,
         last_event: unpublishing_event,
         publish_event: history.last_state_event!("published"),
+        revision: removed_revision,
       )
 
+      current_revision = create_revision(change_history(number: edition_number + 1))
+      migrated_state = MigrateState.call(whitehall_edition["state"], whitehall_edition["force_published"])
       create_edition(
-        status: build_status(MigrateState.call(whitehall_edition["state"], whitehall_edition["force_published"])),
+        status: build_status(current_revision, migrated_state),
         edition_number: edition_number + 1,
         current: true,
         create_event: history.next_event!(unpublishing_event),
+        revision: current_revision,
       )
     end
 
     def create_removed_edition
-      removed_status = build_status("removed", build_removal)
+      revision = create_revision(change_history)
+      removed_status = build_status(revision, "removed", build_removal)
       create_edition(status: removed_status, current: current, edition_number: edition_number,
-                     publish_event: history.last_state_event!("published"))
+                     publish_event: history.last_state_event!("published"), revision: revision)
     end
 
     def check_only_in_english
@@ -86,9 +112,11 @@ module WhitehallImporter
     end
 
     def create_withdrawn_edition
-      create_edition(status: build_status("published"),
+      revision = create_revision(change_history)
+      create_edition(status: build_status(revision, "published"),
                      current: current,
-                     edition_number: edition_number).tap { |edition| set_withdrawn_status(edition) }
+                     edition_number: edition_number,
+                     revision: revision).tap { |edition| set_withdrawn_status(edition) }
     end
 
     def set_withdrawn_status(edition)
@@ -102,7 +130,7 @@ module WhitehallImporter
         withdrawn_at: whitehall_edition["unpublishing"]["created_at"],
       )
 
-      edition.update!(status: build_status("withdrawn", withdrawal))
+      edition.update!(status: build_status(edition.revision, "withdrawn", withdrawal))
     end
 
     def create_scheduled_edition
@@ -110,14 +138,16 @@ module WhitehallImporter
         raise AbortImportError, "Cannot create scheduled status without scheduled_publication"
       end
 
+      revision = create_revision(change_history)
       pre_scheduled_state = history.last_state_event("submitted") ? "submitted_for_review" : "draft"
-      edition = create_edition(status: build_status(pre_scheduled_state),
+      edition = create_edition(status: build_status(revision, pre_scheduled_state),
                                current: current,
-                               edition_number: edition_number)
+                               edition_number: edition_number,
+                               revision: revision)
       scheduling = Scheduling.new(pre_scheduled_status: edition.status,
                                   reviewed: !whitehall_edition["force_published"],
                                   publish_time: whitehall_edition["scheduled_publication"])
-      edition.update!(status: build_status("scheduled", scheduling))
+      edition.update!(status: build_status(revision, "scheduled", scheduling))
       edition
     end
 
@@ -134,7 +164,7 @@ module WhitehallImporter
       )
     end
 
-    def build_status(state, details = nil)
+    def build_status(revision, state, details = nil)
       last_state_event = history.last_state_event!(whitehall_edition["state"])
 
       Status.new(
@@ -146,7 +176,8 @@ module WhitehallImporter
       )
     end
 
-    def create_edition(status:, edition_number:, current:, create_event: nil, last_event: nil, publish_event: nil)
+    def create_edition(status:, edition_number:, current:, revision:,
+                       create_event: nil, last_event: nil, publish_event: nil)
       create_event ||= history.create_event!
       last_event ||= whitehall_edition["revision_history"].last
 
