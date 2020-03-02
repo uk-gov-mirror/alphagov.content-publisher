@@ -51,11 +51,11 @@ RSpec.describe "Remove tasks" do
         .to raise_error("Missing content_id parameter")
     end
 
-    it "raises an error if the document does not have a live version on GOV.uk" do
+    it "raises an error if the edition is not live" do
       draft = create(:edition, locale: "en")
 
       expect { Rake::Task["remove:gone"].invoke(draft.content_id) }
-        .to raise_error("Document must have a published version before it can be removed")
+        .to raise_error(ActiveRecord::NotFound)
     end
   end
 
@@ -104,13 +104,50 @@ RSpec.describe "Remove tasks" do
         .to raise_error("Missing URL value")
     end
 
-    it "raises an error if the document does not have a live version on GOV.uk" do
+    it "raises an error if the edition is not live" do
       draft = create(:edition, locale: "en")
 
       ClimateControl.modify URL: "/redirect" do
         expect { Rake::Task["remove:redirect"].invoke(draft.content_id) }
-          .to raise_error("Document must have a published version before it can be redirected")
+          .to raise_error(ActiveRecord::NotFound)
       end
     end
   end
+
+  describe "remove:vanish" do
+    before { Rake::Task["remove:vanish"].reenable }
+
+    it "delegates to RemoveDocumentService" do
+      Rake::Task["remove:vanish"].invoke(edition.content_id)
+
+      expect(RemoveDocumentService).to have_received(:call) do |removed_edition, removal|
+        expect(removed_edition).to eq(edition)
+        expect(removal).to be_vanish
+      end
+    end
+
+    it "accepts a user email" do
+      user = create(:user, email: "editor@example.com")
+
+      ClimateControl.modify USER_EMAIL: user.email do
+        Rake::Task["remove:vanish"].invoke(edition.content_id)
+      end
+
+      expect(RemoveDocumentService)
+        .to have_received(:call).with(anything, anything, user: user)
+    end
+
+    it "raises an error if a content_id is not present" do
+      expect { Rake::Task["remove:vanish"].invoke }
+        .to raise_error("Missing content_id parameter")
+    end
+
+    it "raises an error if the edition is not live" do
+      draft = create(:edition, locale: "en")
+
+      expect { Rake::Task["remove:vanish"].invoke(draft.content_id) }
+        .to raise_error(ActiveRecord::NotFound)
+    end
+  end
+
 end

@@ -24,7 +24,7 @@ private
   def unpublish_edition
     GdsApi.publishing_api.unpublish(
       edition.content_id,
-      type: removal.redirect? ? "redirect" : "gone",
+      type: removal.removal_type,
       explanation: removal.explanatory_note,
       alternative_path: removal.alternative_url,
       locale: edition.locale,
