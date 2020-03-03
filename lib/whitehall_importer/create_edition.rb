@@ -1,7 +1,7 @@
 module WhitehallImporter
   class CreateEdition
-    attr_reader :document_import, :current, :whitehall_edition, :user_ids, :change_history
-    attr_accessor :edition_number
+    attr_reader :document_import, :whitehall_edition, :change_history,
+                :current, :edition_number, :user_ids,
 
     def self.call(*args)
       new(*args).call
@@ -30,7 +30,7 @@ module WhitehallImporter
                   create_removed_edition
                 else
                   state = MigrateState.call(whitehall_edition["state"], whitehall_edition["force_published"])
-                  revision = create_revision
+                  revision = create_revision(change_history)
                   status = build_status(revision, state)
                   create_edition(status: status, current: current,
                                  edition_number: edition_number, revision: revision)
@@ -45,8 +45,8 @@ module WhitehallImporter
 
   private
 
-    def create_revision
-      CreateRevision.call(document_import, whitehall_edition, change_history.for(edition_number))
+    def create_revision(change_history)
+      CreateRevision.call(document_import, whitehall_edition, change_history)
     end
 
     def history
@@ -59,7 +59,7 @@ module WhitehallImporter
 
     def split_unpublished_edition
       unpublishing_event = history.last_unpublishing_event!
-      removed_revision = create_revision
+      removed_revision = create_revision(change_history)
       create_edition(
         status: build_status(removed_revision, "removed", build_removal),
         current: false,
@@ -68,9 +68,7 @@ module WhitehallImporter
         revision: removed_revision,
       )
 
-      next_edition_number = edition_number + 1
-      edition_number = next_edition_number
-      current_revision = create_revision
+      current_revision = create_revision(edited_unpublished_change_history)
       migrated_state = MigrateState.call(whitehall_edition["state"], whitehall_edition["force_published"])
       create_edition(
         status: build_status(current_revision, migrated_state),
@@ -81,8 +79,23 @@ module WhitehallImporter
       )
     end
 
+    def edited_unpublished_change_history
+      return change_history if edition["minor_change"]
+
+      publish_event = history.last_state_event("published")
+
+      raise AbortImportError, "Edition has a major change but no change note" if whitehall_edition["change_note"].blank?
+      raise AbortImportError, "Edition has a major change but no publish event" if publish_event.blank?
+
+      change_history.prepend({
+        "id" => SecureRandom.uuid,
+        "note" => whitehall_edition["change_note"],
+        "public_timestamp" => publish_event["created_at"],
+      })
+    end
+
     def create_removed_edition
-      revision = create_revision
+      revision = create_revision(change_history)
       removed_status = build_status(revision, "removed", build_removal)
       create_edition(status: removed_status, current: current, edition_number: edition_number, revision: revision)
     end
@@ -99,7 +112,7 @@ module WhitehallImporter
       create_edition(status: build_status(revision, "published"),
                      current: current,
                      edition_number: edition_number,
-                     revision: create_revision).tap { |edition| set_withdrawn_status(edition) }
+                     revision: create_revision(change_history)).tap { |edition| set_withdrawn_status(edition) }
     end
 
     def set_withdrawn_status(edition)

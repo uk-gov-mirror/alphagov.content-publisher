@@ -24,6 +24,7 @@ module WhitehallImporter
         user_ids = create_users(whitehall_document["users"])
         document_import.document = create_document(user_ids)
 
+        change_history = []
         whitehall_document["editions"].each_with_index do |edition, edition_number|
           CreateEdition.call(
             document_import: document_import,
@@ -33,6 +34,8 @@ module WhitehallImporter
             user_ids: user_ids,
             change_history: change_history,
           )
+
+          change_history.prepend(change_history_entry(edition_number))
         end
 
         check_document_integrity(document_import.document)
@@ -49,8 +52,20 @@ module WhitehallImporter
 
   private
 
-    def change_history
-      @change_history ||= ChangeHistory.new(document_import.payload)
+    def change_history_entry(edition_number)
+      edition = whitehall_document["editions"][edition_number]
+      publish_event = EditionHistory.new(edition["revision_history"]).last_state_event("published")
+
+      return [] if edition["minor_change"] || %w[submitted rejected draft].include?(edition["state"])
+
+      raise AbortImportError, "Edition has a major change but no change note" if edition["change_note"].blank?
+      raise AbortImportError, "Edition has a major change but no publish event" if publish_event.blank?
+
+      {
+        "id" => SecureRandom.uuid,
+        "note" => edition["change_note"],
+        "public_timestamp" => publish_event["created_at"],
+      }
     end
 
     def whitehall_document
