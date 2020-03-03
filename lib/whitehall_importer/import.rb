@@ -31,6 +31,7 @@ module WhitehallImporter
             whitehall_edition: edition,
             edition_number: edition_number + 1,
             user_ids: user_ids,
+            change_history: change_history,
           )
         end
 
@@ -47,6 +48,10 @@ module WhitehallImporter
     end
 
   private
+
+    def change_history
+      @change_history ||= ChangeHistory.new(document_import.payload)
+    end
 
     def whitehall_document
       @whitehall_document ||= GdsApi.whitehall_export
