@@ -17,6 +17,7 @@ RSpec.feature "Upload file attachment", js: true do
     and_i_go_to_add_an_attachment
     and_i_select_a_file_to_upload
     and_i_save_the_file_attachment
+    and_i_fill_in_the_metadata
     then_i_can_see_the_attachment
     and_i_see_the_timeline_entry
   end
@@ -70,6 +71,13 @@ RSpec.feature "Upload file attachment", js: true do
 
   def and_i_save_the_file_attachment
     click_on "Save and continue"
+  end
+
+  def and_i_fill_in_the_metadata
+    @unique_reference = "A unique reference"
+
+    fill_in "file_attachment[unique_reference]", with: @unique_reference
+    click_on "Save and finish"
   end
 
   def then_i_can_see_the_attachment
