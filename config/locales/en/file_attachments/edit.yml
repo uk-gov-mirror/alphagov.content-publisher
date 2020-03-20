@@ -3,6 +3,8 @@ en:
     edit:
       update:
         title: "Update attachment details for ‘%{title}’"
+      new:
+        title: "Add attachment details for ‘%{title}’"
       description_govspeak: |
         Include these details if the document contains them to help users find and identify the publication.
       unique_reference:
