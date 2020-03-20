@@ -273,7 +273,8 @@ RSpec.describe "File Attachments" do
                        document_type: document_type)
 
       get edit_file_attachment_path(edition.document,
-                                    file_attachment_revision.file_attachment_id)
+                                    file_attachment_revision.file_attachment_id,
+                                    wizard: "update")
       expect(response).to have_http_status(:ok)
     end
   end
@@ -304,7 +305,8 @@ RSpec.describe "File Attachments" do
 
       patch edit_file_attachment_path(edition.document,
                                       file_attachment_revision.file_attachment_id),
-            params: { file_attachment: { unique_reference: too_long_unique_reference } }
+            params: { file_attachment: { unique_reference: too_long_unique_reference },
+                      wizard: "update" }
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(response.body).to have_content(
