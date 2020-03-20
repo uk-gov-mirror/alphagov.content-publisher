@@ -1,4 +1,4 @@
-<% content_for :title, t("file_attachments.edit.update.title", title: @edition.title_or_fallback) %>
+<% content_for :title, t("file_attachments.edit.#{params[:wizard]}.title", title: @edition.title_or_fallback) %>
 <% content_for :back_link, render_back_link(href: featured_attachments_path(@edition.document),
                                             data_attributes: { "modal-action": "back" }) %>
 
