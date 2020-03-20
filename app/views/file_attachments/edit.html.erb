@@ -13,6 +13,8 @@
         gtm: "edit-details"
       },
     ) do %>
+      <%= hidden_field_tag(:wizard, params[:wizard]) %>
+
       <%= render_govspeak(t("file_attachments.edit.description_govspeak")) %>
 
       <%= render "govuk_publishing_components/components/input", {
