@@ -29,7 +29,7 @@
 
       <%= render "govuk_publishing_components/components/button", {
         margin_bottom: true,
-        text: "Save",
+        text: params[:wizard] == "update" ? "Save" : "Save and finish",
       } %>
 
       <div class="govuk-body">
