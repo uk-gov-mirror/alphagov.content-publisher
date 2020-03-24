@@ -127,6 +127,7 @@ RSpec.describe WhitehallImporter::IntegrityChecker do
       it "returns true even if the public_updated_at times don't match" do
         publishing_api_item[:public_updated_at] = "2019-02-11T09:30:00Z"
         publishing_api_item[:publication_state] = "draft"
+        publishing_api_item[:details] = publishing_api_item[:details].except(:change_history)
         stub_publishing_api_has_item(publishing_api_item)
 
         expect(integrity_check.valid?).to be true
@@ -267,6 +268,7 @@ RSpec.describe WhitehallImporter::IntegrityChecker do
       end
 
       it "returns true if there aren't any problems" do
+        publishing_api_item[:details] = publishing_api_item[:details].except(:change_history)
         stub_publishing_api_has_links(content_id: edition.content_id)
         stub_publishing_api_has_item(publishing_api_item)
 
