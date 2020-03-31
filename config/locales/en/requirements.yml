@@ -79,6 +79,18 @@ en:
     file_attachment_isbn:
       invalid:
         form_message: "Enter a valid ISBN"
+    file_attachment_official_document:
+      not_selected:
+        form_message: "Select official document status"
+    file_attachment_act_paper_number:
+      invalid:
+        form_message: "Act paper number must start with a number"
+    file_attachment_command_paper_number:
+      invalid:
+        form_message: "Command paper is invalid"
+    file_attachment_paper_number:
+      missing:
+        form_message: "Enter a paper number for act paper or command paper"
     file_attachment_unique_reference:
       too_long:
         form_message: "Enter a unique reference that is fewer than %{max_length} characters long"

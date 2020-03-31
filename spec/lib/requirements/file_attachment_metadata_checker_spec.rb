@@ -1,4 +1,56 @@
 RSpec.describe Requirements::FileAttachmentMetadataChecker do
+  describe "#pre_publish_issues" do
+    it "raises an issue if official document status is not selected" do
+      issues = described_class.new({}).pre_publish_issues
+      expect(issues).to have_issue(:file_attachment_official_document, :not_selected)
+    end
+
+    %w(act_paper command_paper).each do |doc_type|
+      it "raises an issue if #{doc_type} number is missing" do
+        issues = described_class.new({ official_document_type: doc_type }).pre_publish_issues
+        expect(issues).to have_issue(:file_attachment_paper_number, :missing)
+      end
+    end
+
+    it "raises an issue if a given act paper number is invalid" do
+      issues = described_class.new({ official_document_type: "act_paper", paper_number: "invalid" }).pre_publish_issues
+      expect(issues).to have_issue(:file_attachment_act_paper_number, :invalid)
+    end
+
+    ["C.", "Cd.", "Cmd.", "Cmnd.", "Cm.", "CP"].each do |prefix|
+      it "does not raise an issue when the command paper number starts with '#{prefix}'" do
+        issues = described_class.new({ official_document_type: "command_paper", paper_number: "#{prefix} 1234" }).pre_publish_issues
+        expect(issues).to be_empty
+      end
+    end
+
+    ["NA", "C", "Cd ", "CM.", "CP."].each do |prefix|
+      it "raises an issue when the command paper number starts with '#{prefix}'" do
+        issues = described_class.new({ official_document_type: "command_paper", paper_number: "#{prefix} 1234" }).pre_publish_issues
+        expect(issues).to have_issue(:file_attachment_command_paper_number, :invalid)
+      end
+    end
+
+    ["-I", "-IV", "-VIII"].each do |suffix|
+      it "does not raise an issue when the command paper number ends with '#{suffix}'" do
+        issues = described_class.new({ official_document_type: "command_paper", paper_number: "C. 1234#{suffix}" }).pre_publish_issues
+        expect(issues).to be_empty
+      end
+    end
+
+    ["-i", "-Iv", "VIII"].each do |suffix|
+      it "raises an issue when the command paper number ends with '#{suffix}'" do
+        issues = described_class.new({ official_document_type: "command_paper", paper_number: "C. 1234#{suffix}" }).pre_publish_issues
+        expect(issues).to have_issue(:file_attachment_command_paper_number, :invalid)
+      end
+    end
+
+    it "raises an issue when the command paper number has no space after the prefix" do
+      issues = described_class.new({ official_document_type: "command_paper", paper_number: "C.1234" }).pre_publish_issues
+      expect(issues).to have_issue(:file_attachment_command_paper_number, :invalid)
+    end
+  end
+
   describe "#pre_update_issues" do
     let(:max_length) { Requirements::FileAttachmentMetadataChecker::UNIQUE_REF_MAX_LENGTH }
 
