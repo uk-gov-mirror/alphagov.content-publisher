@@ -1,6 +1,12 @@
 RSpec.feature "Viewing debug information" do
+  given(:edition_with_revisions) do
+    create(:edition).tap do |edition|
+      revisions = create_list(:revision, 25, document: edition.document)
+      edition.update!(revision: revisions.last)
+    end
+  end
+
   scenario do
-    given_there_is_an_edition_with_revisions
     when_i_dont_have_the_debug_permission
     and_i_visit_the_debug_page
     then_i_see_an_error_page
@@ -10,14 +16,8 @@ RSpec.feature "Viewing debug information" do
     and_i_can_paginate_to_the_next_page
   end
 
-  def given_there_is_an_edition_with_revisions
-    @edition = create(:edition)
-    revisions = create_list(:revision, 25, document: @edition.document)
-    @edition.update!(revision: revisions.last)
-  end
-
   def and_i_visit_the_debug_page
-    visit debug_document_path(@edition.document)
+    visit debug_document_path(edition_with_revisions.document)
   end
 
   def when_i_dont_have_the_debug_permission
@@ -36,7 +36,7 @@ RSpec.feature "Viewing debug information" do
 
   def then_i_see_the_debug_page
     expect(page).to have_content(
-      "Revision history for ‘#{@edition.title_or_fallback}’",
+      "Revision history for ‘#{edition_with_revisions.title_or_fallback}’",
     )
   end
 

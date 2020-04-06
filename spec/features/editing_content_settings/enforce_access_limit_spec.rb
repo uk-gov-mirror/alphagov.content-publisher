@@ -1,8 +1,32 @@
 RSpec.feature "Enforce access limit" do
-  background do
-    given_there_is_an_edition_in_multiple_orgs
-    and_there_is_a_user_in_a_supporting_org
-    and_there_is_a_user_in_some_other_org
+  given(:supporting_org_id) { SecureRandom.uuid }
+  given(:primary_org_id) { current_user.organisation_content_id }
+
+  given(:multiple_org_edition) do
+    @edition = create(
+      :edition,
+      tags: {
+        primary_publishing_organisation: [primary_org_id],
+        organisations: [supporting_org_id],
+      },
+    )
+  end
+
+  given(:supporting_org_user) do
+    create(:user, organisation_content_id: supporting_org_id)
+  end
+
+  given(:other_org_user) do
+    create(:user, organisation_content_id: SecureRandom.uuid)
+  end
+
+  before do
+    stub_publishing_api_has_linkables(
+      [{ "content_id" => primary_org_id, "internal_name" => "Primary org" }],
+      document_type: "organisation",
+    )
+
+    stub_any_publishing_api_put_content
   end
 
   scenario "primary organisation" do
@@ -23,46 +47,14 @@ RSpec.feature "Enforce access limit" do
     and_someone_in_another_org_cannot
   end
 
-  def given_there_is_an_edition_in_multiple_orgs
-    @supporting_org = SecureRandom.uuid
-    @primary_org = current_user.organisation_content_id
-
-    stub_publishing_api_has_linkables(
-      [{ "content_id" => @primary_org, "internal_name" => "Primary org" }],
-      document_type: "organisation",
-    )
-
-    @edition = create(
-      :edition,
-      tags: {
-        primary_publishing_organisation: [@primary_org],
-        organisations: [@supporting_org],
-      },
-      image_revisions: [
-        create(:image_revision, :on_asset_manager),
-      ],
-    )
-
-    stub_asset_manager_updates_any_asset
-    stub_any_publishing_api_put_content
-  end
-
-  def and_there_is_a_user_in_a_supporting_org
-    @supporting_org_user = create(:user, organisation_content_id: @supporting_org)
-  end
-
-  def and_there_is_a_user_in_some_other_org
-    @other_org_user = create(:user, organisation_content_id: SecureRandom.uuid)
-  end
-
   def when_i_limit_to_my_organisation
-    visit access_limit_path(@edition.document)
+    visit access_limit_path(multiple_org_edition.document)
     choose I18n.t!("access_limit.edit.type.primary_organisation")
     click_on "Save"
   end
 
   def when_i_limit_to_tagged_organisations
-    visit access_limit_path(@edition.document)
+    visit access_limit_path(multiple_org_edition.document)
     choose I18n.t!("access_limit.edit.type.tagged_organisations")
     click_on "Save"
   end
@@ -79,32 +71,33 @@ RSpec.feature "Enforce access limit" do
   end
 
   def and_i_can_still_edit_the_edition
-    visit document_path(@edition.document)
+    visit document_path(multiple_org_edition.document)
     expect(page).to have_content("Change Access limiting")
-    visit content_path(@edition.document)
-    expect(page).to have_content(I18n.t!("content.edit.title", title: @edition.title_or_fallback))
+    visit content_path(multiple_org_edition.document)
+    title = I18n.t!("content.edit.title", title: multiple_org_edition.title_or_fallback)
+    expect(page).to have_content(title)
   end
 
   def and_the_supporting_user_can_also
-    login_as(@supporting_org_user)
+    login_as(supporting_org_user)
     and_i_can_still_edit_the_edition
   end
 
   def and_the_supporting_user_cannot
-    login_as(@supporting_org_user)
+    login_as(supporting_org_user)
     i_cannot_edit_the_edition
   end
 
   def and_someone_in_another_org_cannot
-    login_as(@other_org_user)
+    login_as(other_org_user)
     i_cannot_edit_the_edition
   end
 
   def i_cannot_edit_the_edition
-    visit document_path(@edition.document)
+    visit document_path(multiple_org_edition.document)
     expect(page).to have_content(I18n.t!("documents.access_limited.description"))
     expect(page).to have_content(I18n.t!("documents.access_limited.owner", primary_org: "Primary org"))
-    visit content_path(@edition.document)
+    visit content_path(multiple_org_edition.document)
     expect(page).to have_content(I18n.t!("documents.access_limited.description"))
     expect(page).to have_content(I18n.t!("documents.access_limited.owner", primary_org: "Primary org"))
   end

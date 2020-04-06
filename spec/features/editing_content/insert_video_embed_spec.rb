@@ -1,19 +1,17 @@
-RSpec.describe "Insert video embed", js: true do
+RSpec.feature "Insert video embed", js: true do
+  given(:edition) do
+    create(:edition, document_type: build(:document_type, :with_body))
+  end
+
   scenario do
-    given_there_is_an_edition
     when_i_go_to_edit_the_edition
     and_i_click_to_insert_a_video
     and_i_enter_and_embed_a_video
     then_i_see_the_snippet_is_inserted
   end
 
-  def given_there_is_an_edition
-    document_type = build(:document_type, :with_body)
-    @edition = create(:edition, document_type: document_type)
-  end
-
   def when_i_go_to_edit_the_edition
-    visit content_path(@edition.document)
+    visit content_path(edition.document)
   end
 
   def and_i_click_to_insert_a_video

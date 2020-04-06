@@ -1,6 +1,7 @@
 RSpec.feature "Backdate content" do
+  given(:edition) { create(:edition) }
+
   scenario do
-    given_there_is_a_document_with_a_first_edition
     when_i_visit_the_summary_page
     then_i_see_that_the_content_has_not_been_backdated
 
@@ -16,12 +17,8 @@ RSpec.feature "Backdate content" do
     and_i_see_the_cleared_backdate_timeline_entry
   end
 
-  def given_there_is_a_document_with_a_first_edition
-    @edition = create(:edition)
-  end
-
   def when_i_visit_the_summary_page
-    visit document_path(@edition.document)
+    visit document_path(edition.document)
   end
 
   def then_i_see_that_the_content_has_not_been_backdated
@@ -42,7 +39,7 @@ RSpec.feature "Backdate content" do
   end
 
   def and_i_click_save
-    stub_publishing_api_put_content(@edition.content_id, {})
+    stub_publishing_api_put_content(edition.content_id, {})
     click_on "Save"
   end
 

@@ -1,6 +1,15 @@
 RSpec.feature "Insert inline file attachment" do
+  given(:file_attachment_revision) do
+    create(:file_attachment_revision, :on_asset_manager, filename: "foo.pdf")
+  end
+
+  given(:edition) do
+    create(:edition,
+           document_type: build(:document_type, :with_body),
+           file_attachment_revisions: [file_attachment_revision])
+  end
+
   scenario "block snippet", js: true do
-    given_there_is_an_edition_with_file_attachments
     when_i_go_to_edit_the_edition
     and_i_click_to_insert_a_file_attachment
     and_i_choose_one_of_the_file_attachments
@@ -9,7 +18,6 @@ RSpec.feature "Insert inline file attachment" do
   end
 
   scenario "link snippet", js: true do
-    given_there_is_an_edition_with_file_attachments
     when_i_go_to_edit_the_edition
     and_i_click_to_insert_a_file_attachment
     and_i_choose_one_of_the_file_attachments
@@ -18,7 +26,6 @@ RSpec.feature "Insert inline file attachment" do
   end
 
   scenario "without javascript" do
-    given_there_is_an_edition_with_file_attachments
     when_i_go_to_edit_the_edition
     and_i_click_to_insert_a_file_attachment
     and_i_choose_one_of_the_file_attachments
@@ -26,17 +33,8 @@ RSpec.feature "Insert inline file attachment" do
     and_i_see_the_attachment_link_markdown_snippet
   end
 
-  def given_there_is_an_edition_with_file_attachments
-    @file_attachment_revision = create(:file_attachment_revision,
-                                       :on_asset_manager,
-                                       filename: "foo.pdf")
-    @edition = create(:edition,
-                      document_type: build(:document_type, :with_body),
-                      file_attachment_revisions: [@file_attachment_revision])
-  end
-
   def when_i_go_to_edit_the_edition
-    visit content_path(@edition.document)
+    visit content_path(edition.document)
   end
 
   def and_i_click_to_insert_a_file_attachment
@@ -61,26 +59,26 @@ RSpec.feature "Insert inline file attachment" do
   def then_i_see_the_attachment_snippet_is_inserted
     expect(page).not_to have_selector(".gem-c-modal-dialogue") # wait for modal to close
     snippet = I18n.t("file_attachments.show.attachment_markdown",
-                     filename: @file_attachment_revision.filename)
+                     filename: file_attachment_revision.filename)
     expect(find("#body-field").value).to include snippet
   end
 
   def then_i_see_the_attachment_link_snippet_is_inserted
     expect(page).not_to have_selector(".gem-c-modal-dialogue") # wait for modal to close
     snippet = I18n.t("file_attachments.show.attachment_link_markdown",
-                     filename: @file_attachment_revision.filename)
+                     filename: file_attachment_revision.filename)
     expect(find("#body-field").value).to include snippet
   end
 
   def then_i_see_the_attachment_markdown_snippet
     snippet = I18n.t("file_attachments.show.attachment_markdown",
-                     filename: @file_attachment_revision.filename)
+                     filename: file_attachment_revision.filename)
     expect(page).to have_content(snippet)
   end
 
   def and_i_see_the_attachment_link_markdown_snippet
     snippet = I18n.t("file_attachments.show.attachment_link_markdown",
-                     filename: @file_attachment_revision.filename)
+                     filename: file_attachment_revision.filename)
     expect(page).to have_content(snippet)
   end
 end

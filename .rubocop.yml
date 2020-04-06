@@ -72,10 +72,9 @@ Capybara/FeatureMethods:
   Exclude:
     - 'spec/features/**/*.rb'
 
-# Part of the GOV.UK feature spec style involves instance variables
-RSpec/InstanceVariable:
-  Exclude:
-    - 'spec/features/**/*.rb'
+# RSpec/InstanceVariable:
+#   Exclude:
+#     - 'spec/features/**/*.rb'
 
 # In GOV.UK we quite often test that a class received a particular method
 RSpec/MessageSpies:

@@ -1,6 +1,11 @@
 RSpec.feature "Edit an edition" do
+  given(:edition) do
+    document_type = build(:document_type, :with_body)
+    contents = { body: "Existing body" }
+    create(:edition, document_type: document_type, contents: contents)
+  end
+
   scenario do
-    given_there_is_an_edition
     when_i_go_to_edit_the_edition
     and_i_fill_in_the_content_fields
     then_i_see_the_edition_is_saved
@@ -8,21 +13,15 @@ RSpec.feature "Edit an edition" do
     and_i_see_the_timeline_entry
   end
 
-  def given_there_is_an_edition
-    document_type = build(:document_type, :with_body)
-    contents = { body: "Existing body" }
-    @edition = create(:edition, document_type: document_type, contents: contents)
-  end
-
   def when_i_go_to_edit_the_edition
-    visit document_path(@edition.document)
+    visit document_path(edition.document)
     expect(page).to have_content("Existing body")
     click_on "Change Content"
   end
 
   def and_i_fill_in_the_content_fields
     fill_in "body", with: "Edited body."
-    stub_publishing_api_put_content(@edition.content_id, {})
+    stub_publishing_api_put_content(edition.content_id, {})
     click_on "Save"
   end
 

@@ -1,6 +1,25 @@
 RSpec.feature "Edit access limit" do
+  given(:access_limited_edition) do
+    supporting_org = SecureRandom.uuid
+    primary_org = current_user.organisation_content_id
+
+    stub_publishing_api_has_linkables(
+      [{ "content_id" => primary_org, "internal_name" => "Primary org" },
+       { "content_id" => supporting_org, "internal_name" => "Supporting org" }],
+      document_type: "organisation",
+    )
+    create(
+      :edition,
+      :access_limited,
+      limit_type: :tagged_organisations,
+      tags: {
+        primary_publishing_organisation: [primary_org],
+        organisations: [supporting_org],
+      },
+    )
+  end
+
   scenario do
-    given_there_is_an_access_limited_edition
     when_i_visit_the_summary_page
     and_i_go_to_edit_the_access_limit
     then_i_see_the_current_access_limit
@@ -15,29 +34,8 @@ RSpec.feature "Edit access limit" do
     and_i_see_the_access_limit_removed_timeline_entry
   end
 
-  def given_there_is_an_access_limited_edition
-    supporting_org = SecureRandom.uuid
-    primary_org = current_user.organisation_content_id
-
-    stub_publishing_api_has_linkables(
-      [{ "content_id" => primary_org, "internal_name" => "Primary org" },
-       { "content_id" => supporting_org, "internal_name" => "Supporting org" }],
-      document_type: "organisation",
-    )
-
-    @edition = create(
-      :edition,
-      :access_limited,
-      limit_type: :tagged_organisations,
-      tags: {
-        primary_publishing_organisation: [primary_org],
-        organisations: [supporting_org],
-      },
-    )
-  end
-
   def when_i_visit_the_summary_page
-    visit document_path(@edition.document)
+    visit document_path(access_limited_edition.document)
   end
 
   def and_i_go_to_edit_the_access_limit
