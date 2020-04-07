@@ -1,39 +1,39 @@
 <%
-  attachment = GovukPublishingComponents::Presenters::Attachment.new(attachment)
+  presenter = GovukPublishingComponents::Presenters::Attachment.new(attachment)
   attributes = []
 
-  if attachment.content_type_name
-    content = if attachment.content_type_abbr
-                raw tag.abbr(attachment.content_type.abbr,
-                             title: attachment.content_type_name,
+  if presenter.content_type_name
+    content = if presenter.content_type_abbr
+                raw tag.abbr(presenter.content_type.abbr,
+                             title: presenter.content_type_name,
                              class: "app-c-attachment-meta__abbr")
               else
-                attachment.content_type_name
+                presenter.content_type_name
               end
     attributes << tag.span(content, class: "app-c-attachment-meta__attribute")
   end
 
-  if attachment.file_size
+  if presenter.file_size
     attributes << tag.span(
-      number_to_human_size(attachment.file_size),
+      number_to_human_size(presenter.file_size),
       class: "app-c-attachment-meta__attribute",
     )
   end
 
-  if attachment.number_of_pages
+  if presenter.number_of_pages
     attributes << tag.span(
-      pluralize(attachment.number_of_pages, "page"),
+      pluralize(presenter.number_of_pages, "page"),
       class: "app-c-attachment-meta__attribute",
     )
   end
 %>
 <%= tag.section class: "app-c-attachment-meta" do %>
-  <% if attachment.reference.present? %>
-    <%= tag.p "Ref: #{attachment.reference}", class: "app-c-attachment-meta__metadata govuk-!-margin-bottom-0" %>
+  <% if presenter.reference.present? %>
+    <%= tag.p "Ref: #{presenter.reference}", class: "app-c-attachment-meta__metadata govuk-!-margin-bottom-0" %>
   <% end %>
 
-  <% if attachment.unnumbered_reference.present? %>
-    <%= tag.p attachment.unnumbered_reference, class: "app-c-attachment-meta__metadata govuk-!-margin-bottom-0" %>
+  <% if presenter.unnumbered_reference.present? %>
+    <%= tag.p presenter.unnumbered_reference, class: "app-c-attachment-meta__metadata govuk-!-margin-bottom-0" %>
   <% end %>
 
   <% if attributes.any? %>
