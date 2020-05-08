@@ -1,3 +1,14 @@
+GIT
+  remote: https://github.com/alphagov/rubocop-govuk
+  revision: ba650bfa2f61ad44b2f849d58172328b1aa0e949
+  branch: ignore-vendor
+  specs:
+    rubocop-govuk (3.8.0)
+      rubocop (= 0.82.0)
+      rubocop-rails (~> 2)
+      rubocop-rake (~> 0.5.1)
+      rubocop-rspec (~> 1.28)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -370,11 +381,6 @@ GEM
       rexml
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 2.0)
-    rubocop-govuk (3.8.0)
-      rubocop (= 0.82.0)
-      rubocop-rails (~> 2)
-      rubocop-rake (~> 0.5.1)
-      rubocop-rspec (~> 1.28)
     rubocop-rails (2.5.2)
       activesupport
       rack (>= 1.1)
@@ -522,7 +528,7 @@ DEPENDENCIES
   rails (~> 6.0)
   rinku (~> 2)
   rspec-rails (~> 4)
-  rubocop-govuk (~> 3)
+  rubocop-govuk!
   rubyzip (~> 2)
   sanitize (~> 5)
   sass-rails (< 6)

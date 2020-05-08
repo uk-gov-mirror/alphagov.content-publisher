@@ -9,15 +9,6 @@ inherit_mode:
   merge:
     - Exclude
 
-AllCops:
-  TargetRubyVersion: 2.5
-  Exclude:
-    - bin/**/*
-    - config.ru
-    - db/schema.rb
-    - tmp/**/*
-    - node_modules/**/*
-
 Metrics/BlockLength:
   Exclude:
     - 'config/environments/*.rb'
