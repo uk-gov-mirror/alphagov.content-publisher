@@ -202,9 +202,10 @@ RSpec.describe EditionFilter do
       it "includes the edition" do
         edition = create(:edition, :access_limited)
 
-        gds_user = build(:user, permissions: [
-          User::ACCESS_LIMIT_OVERRIDE_PERMISSION,
-        ])
+        gds_user = build(:user,
+                         permissions: [
+                           User::ACCESS_LIMIT_OVERRIDE_PERMISSION,
+                         ])
 
         editions = described_class.new(gds_user).editions
         expect(editions).to eq([edition])

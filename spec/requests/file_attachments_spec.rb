@@ -170,11 +170,13 @@ RSpec.describe "File Attachments" do
       file = fixture_file_upload("files/text-file-74bytes.txt")
 
       post file_attachments_path(edition.document),
-           params: { file: file, title: "File",
+           params: { file: file,
+                     title: "File",
                      wizard: "featured-attachment-upload" }
 
       expect(response).to redirect_to(
-        edit_file_attachment_path(edition.document, FileAttachment.last,
+        edit_file_attachment_path(edition.document,
+                                  FileAttachment.last,
                                   wizard: "featured-attachment-upload"),
       )
     end
@@ -264,7 +266,8 @@ RSpec.describe "File Attachments" do
                         wizard: "featured-attachment-upload" }
 
         expect(response).to redirect_to(
-          edit_file_attachment_path(edition.document, file_attachment_id,
+          edit_file_attachment_path(edition.document,
+                                    file_attachment_id,
                                     wizard: "featured-attachment-upload"),
         )
       end

@@ -31,8 +31,10 @@ module WhitehallImporter
                   state = MigrateState.call(whitehall_edition["state"], whitehall_edition["force_published"])
                   revision = create_revision(edition_number)
                   status = build_status(revision, state)
-                  create_edition(status: status, current: current,
-                                 edition_number: edition_number, revision: revision)
+                  create_edition(status: status,
+                                 current: current,
+                                 edition_number: edition_number,
+                                 revision: revision)
                 end
 
       create_revision_history(edition)
@@ -216,7 +218,9 @@ module WhitehallImporter
         }
         details = create_whitehall_imported_entry("internal_note", contents)
         create_timeline_entry(details,
-                              edition, event["created_at"], event["author_id"])
+                              edition,
+                              event["created_at"],
+                              event["author_id"])
       end
     end
 
@@ -234,7 +238,9 @@ module WhitehallImporter
       }
       details = create_whitehall_imported_entry("fact_check_request", contents)
       create_timeline_entry(details,
-                            edition, event["created_at"], event["requestor_id"])
+                            edition,
+                            event["created_at"],
+                            event["requestor_id"])
     end
 
     def create_fact_check_response(edition, event)

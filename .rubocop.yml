@@ -92,21 +92,21 @@ RSpec/NestedGroups:
 # better with the indentation Cops, produces clearer diffs,
 # and avoids wasting time tweaking an arbitrary layout.
 Layout/MultilineArrayLineBreaks:
-  Enabled: false
+  Enabled: true
 
 # We should be consistent: if some items of a hash are
 # on multiple lines, then all items should be. This works
 # better with the indentation Cops, produces clearer diffs,
 # and avoids wasting time tweaking an arbitrary layout.
 Layout/MultilineHashKeyLineBreaks:
-  Enabled: false
+  Enabled: true
 
 # We should be consistent: if some items of a method call are
 # on multiple lines, then all items should be. This works
 # better with the indentation Cops, produces clearer diffs,
 # and avoids wasting time tweaking an arbitrary layout.
 Layout/MultilineMethodArgumentLineBreaks:
-  Enabled: false
+  Enabled: true
 
 # We should put each argument of a method call on a new line,
 # if any are on new lines. This prevents unnecessary decisions

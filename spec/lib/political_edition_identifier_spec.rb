@@ -14,9 +14,10 @@ RSpec.describe PoliticalEditionIdentifier do
       organisations_field = DocumentType::OrganisationsField.new
       role_appointments_field = DocumentType::RoleAppointmentsField.new
 
-      build(:document_type, tags: [primary_organisation_field,
-                                   organisations_field,
-                                   role_appointments_field])
+      build(:document_type,
+            tags: [primary_organisation_field,
+                   organisations_field,
+                   role_appointments_field])
     end
 
     it "returns true when an edition is associated with a role appointment" do
